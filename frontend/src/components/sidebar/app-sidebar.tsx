@@ -1,5 +1,6 @@
 import { Sidebar, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from "@/components/ui/sidebar"
 import { CalendarSearch, CircleUserRound, FileStack, Heart, House, Settings } from "lucide-react" 
+import Image from "next/image"
 import Link from "next/link"
 
 export function AppSidebar() {
@@ -11,7 +12,7 @@ export function AppSidebar() {
     <SidebarMenu className="gap-4">
       <SidebarMenuItem>
         <SidebarMenuButton asChild className="justify-center">
-          <Link href="/"><House /></Link>
+          <Link href="/"><Image src="/Rag-Diary-Logo.png" width={35} height={35} alt="Home" /></Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
 
@@ -23,7 +24,7 @@ export function AppSidebar() {
 
       <SidebarMenuItem>
         <SidebarMenuButton asChild className="justify-center">
-          <Link href="/diary"><FileStack /></Link>
+          <Link href="/historyBoard"><FileStack /></Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
 

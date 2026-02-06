@@ -1,15 +1,13 @@
-import Image from "next/image";
-import { api } from '@/lib/api'
-import DiaryForm from "@/components/diaryCard";
+import AIButton from "@/components/diary/AIButton";
+import DiaryForm from "@/components/diary/diaryForm";
+
 
 export default function Home() {
-  const fetchNotes = async () => {
-    const data = await api.notes.get()
-    console.log(data)
-  }
   return (
-    <>
-    <DiaryForm />
-    </>
+    <main className="max-w-2xl mx-auto p-8 min-h-screen bg-gray-50">
+      <h1 className="text-3xl font-bold mb-8 text-center text-blue-900">RAG-DIARY</h1>
+        <DiaryForm />
+        {/* <AIButton /> */}
+    </main>
   );
 }

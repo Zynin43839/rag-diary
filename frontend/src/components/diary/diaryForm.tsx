@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 export default function DiaryForm() {
     //Set UseState (for reset content) & TanStack (for manage data)
     const [content, setContent] = useState('')
+    const [tag, setTag] = useState("General")
     const queryClient = useQueryClient()
 
     //Build mutation for sent data to elysia
@@ -27,7 +28,7 @@ export default function DiaryForm() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (!content.trim()) return
-        mutation.mutate(content)
+        mutation.mutate({ content, tag })
     }
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 border rounded-xl shadow-sm bg-white">
@@ -39,6 +40,16 @@ export default function DiaryForm() {
             onChange={(e) => setContent(e.target.value)}
             disabled={mutation.isPending}
           />
+          <select 
+            value={tag} 
+            onChange={(e) => setTag(e.target.value)}
+            className="mb-4 p-2 border rounded text-black"
+            >
+              <option value="General">General 🏠</option>
+              <option value="Work">Work 💼</option>
+              <option value="Idea">Idea 💡</option>
+              <option value="Feeling">Feeling ❤️</option>
+          </select>
           <button
             type="submit"
             disabled={mutation.isPending}
