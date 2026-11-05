@@ -1,11 +1,16 @@
 import { Elysia } from 'elysia';
 import { UnauthorizedError } from './auth';
 import { describeValidation } from './validation-message';
+import { RateLimitError } from './rate-limit';
 
 export const errorHandler = new Elysia()
     .onError({ as: 'global' }, ({ error, code, set }) => {
         const message = error instanceof Error ? error.message : String(error);
 
+        if (error instanceof RateLimitError) {
+            set.status = 429;
+            return { error: message };
+        }
         if (error instanceof UnauthorizedError) {
             set.status = 401;
             return { error: message };

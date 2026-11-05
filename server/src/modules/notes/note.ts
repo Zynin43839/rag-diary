@@ -1,5 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { authGuard } from '../../lib/auth';
+import { enforceRateLimit } from '../../lib/rate-limit';
 import { generateEmbedding } from '../ai/rag';
 
 /** Columns the client actually needs (no embedding, no user_id). */
@@ -33,6 +34,7 @@ export const noteRoutes = new Elysia()
     })
 
     .post("/notes", async ({ db, user, body }) => {
+        await enforceRateLimit(db, user.id, 60, 60);
         const embedding = await embedOrNull(body.content);
         const { data, error } = await db
             .from('diary_entries')
@@ -71,7 +73,8 @@ export const noteRoutes = new Elysia()
         })
     })
 
-    .patch("/notes/:id", async ({ db, params, body, set }) => {
+    .patch("/notes/:id", async ({ db, user, params, body, set }) => {
+        await enforceRateLimit(db, user.id, 60, 60);
         const embedding = await embedOrNull(body.content);
         const { data, error } = await db
             .from('diary_entries')

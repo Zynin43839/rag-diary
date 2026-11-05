@@ -4,6 +4,7 @@ import { streamText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { findSimilarEntries, formatContext } from './rag';
 import { authGuard } from '../../lib/auth';
+import { enforceRateLimit } from '../../lib/rate-limit';
 import {
     CHAT_MODEL,
     GEMINI_API_BASE,
@@ -22,7 +23,8 @@ function geminiClient() {
 export const aiRoutes = new Elysia()
     .use(authGuard)
 
-    .post("/search/semantic", async ({ db, body }) => {
+    .post("/search/semantic", async ({ db, user, body }) => {
+        await enforceRateLimit(db, user.id, 60, 60);
         try {
             const results = await findSimilarEntries(
                 db,
@@ -42,7 +44,8 @@ export const aiRoutes = new Elysia()
         })
     })
 
-    .post("/chat", async ({ db, body }) => {
+    .post("/chat", async ({ db, user, body }) => {
+        await enforceRateLimit(db, user.id, 20, 60);
         try {
             const relevantEntries = await findSimilarEntries(db, body.query, 0.6, 5);
             const context = formatContext(relevantEntries);
@@ -77,7 +80,8 @@ export const aiRoutes = new Elysia()
         })
     })
 
-    .post("/ai/summarize", async ({ body, set }) => {
+    .post("/ai/summarize", async ({ db, user, body, set }) => {
+        await enforceRateLimit(db, user.id, 20, 60);
         if (body.notes.length === 0) {
             set.status = 400;
             return { error: 'notes must not be empty' };
@@ -109,7 +113,8 @@ export const aiRoutes = new Elysia()
         })
     })
 
-    .post("/ai/imagine", async ({ body, set }) => {
+    .post("/ai/imagine", async ({ db, user, body, set }) => {
+        await enforceRateLimit(db, user.id, 5, 60);
         const res = await fetch(
             `${GEMINI_API_BASE}/models/${IMAGE_MODEL}:generateContent`,
             {
