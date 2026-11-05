@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/utils/auth-context'
-import { DIARY_ENTRIES_QUERY_KEY, fetchNotes } from '@/lib/hooks/useDiary'
+import { DIARY_ENTRIES_QUERY_KEY } from '@/lib/hooks/useDiary'
 import { api } from '@/lib/api'
 import { hasAiConsent, revokeAiConsent } from '@/lib/consent'
 import { friendlyError } from '@/lib/errors'
@@ -33,8 +33,9 @@ export default function SettingPage() {
     }
     setBusy(true)
     try {
-      const notes = await fetchNotes()
-      const blob = new Blob([JSON.stringify(notes, null, 2)], {
+      const { data, error } = await api.export.get()
+      if (error) throw new Error(String(error.value))
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: 'application/json',
       })
       const url = URL.createObjectURL(blob)
@@ -65,12 +66,10 @@ export default function SettingPage() {
     if (!ok) return
     setBusy(true)
     try {
-      const notes = await fetchNotes()
-      for (const n of notes) {
-        await api.notes({ id: n.id }).delete()
-      }
+      const { data, error } = await api.data.delete()
+      if (error) throw new Error(String(error.value))
       queryClient.invalidateQueries({ queryKey: DIARY_ENTRIES_QUERY_KEY })
-      toast.success(`ลบบันทึกแล้ว ${notes.length} รายการ`)
+      toast.success(`ลบบันทึกแล้ว ${data?.deleted ?? 0} รายการ`)
     } catch (e) {
       toast.error(friendlyError(e, 'ลบข้อมูลไม่สำเร็จ กรุณาลองใหม่'))
     } finally {

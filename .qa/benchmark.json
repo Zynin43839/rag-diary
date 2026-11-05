@@ -7,6 +7,6 @@
   "test_cases": 23,
   "adrs": 8,
   "change_requests": 8,
-  "api_endpoints": 13,
+  "api_endpoints": 15,
   "traceability_percent": 100
 }

@@ -3,6 +3,7 @@ import { cors } from '@elysiajs/cors';
 import { noteRoutes } from './modules/notes/note';
 import { aiRoutes } from './modules/ai/ai';
 import { authRoutes } from './modules/user/auth';
+import { dataRoutes } from './modules/data/data';
 import { errorHandler } from './lib/error';
 
 /**
@@ -25,6 +26,7 @@ const app = new Elysia()
     .use(errorHandler)
     .use(authRoutes)
     .use(noteRoutes)
+    .use(dataRoutes)
     .use(aiRoutes)
     .get("/", () => "Elysia Server is Running! 🦊");
 
