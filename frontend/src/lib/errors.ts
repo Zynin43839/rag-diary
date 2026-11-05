@@ -27,11 +27,11 @@ export function friendlyError(
   if (msg.includes('failed to fetch') || msg.includes('fetch failed') || msg.includes('network') || msg.includes('econnrefused') || msg.includes('unable to connect') || msg.includes('typo in the url')) {
     return 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'
   }
-  if (msg.includes('validation') || msg.includes('invalid ') || msg.includes('expected string')) {
-    return 'ข้อมูลที่กรอกไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง'
-  }
   if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('invalid_grant')) {
     return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
+  }
+  if (msg.includes('validation') || msg.includes('invalid ') || msg.includes('expected string')) {
+    return 'ข้อมูลที่กรอกไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง'
   }
   if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('user already')) {
     return 'อีเมลนี้ถูกใช้ไปแล้ว กรุณาเข้าสู่ระบบหรือใช้อีเมลอื่น'
