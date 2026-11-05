@@ -1,13 +1,34 @@
 import { treaty } from '@elysiajs/eden'
-import type { App } from '../../../server/src/index'
+import {
+  authHeader,
+  getAccessToken,
+  getRefreshToken,
+  refreshAccessToken,
+} from './session'
+import { API_BASE_URL } from './config'
 
-/** Backend origin — set in production (must match Elysia `cors.origin`). */
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+export { API_BASE_URL }
 
-// Eden + `App` from server: separate `elysia` installs break the generic constraint.
-// @ts-expect-error — treaty runtime is correct; only cross-package Elysia types clash
-export const api = treaty<App>(API_BASE_URL)
+// Inject the signed-in user's token and retry once after a refresh.
+const authFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+  const send = () => {
+    const headers = new Headers(init?.headers)
+    const token = getAccessToken()
+    if (token) headers.set('Authorization', `Bearer ${token}`)
+    return fetch(input, { ...init, headers })
+  }
+
+  let res = await send()
+  if (res.status === 401 && getRefreshToken() && (await refreshAccessToken())) {
+    res = await send()
+  }
+  return res
+}
+
+// The API is deployed as a separate Vercel project, so the server's type-only
+// import would fall outside this build. The client stays runtime-correct and
+// the call sites narrow their own result shapes.
+export const api = treaty(API_BASE_URL, { fetcher: authFetch } as any) as any
 
 export async function postChatPlainText(query: string): Promise<string> {
   const res = await fetch(`${API_BASE_URL}/chat`, {
@@ -15,6 +36,7 @@ export async function postChatPlainText(query: string): Promise<string> {
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json',
+      ...authHeader(),
     },
     body: JSON.stringify({ query }),
   })

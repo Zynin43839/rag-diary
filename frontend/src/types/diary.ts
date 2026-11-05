@@ -10,6 +10,8 @@ export interface SearchResult {
   id: string
   content: string
   created_at: string
+  /** Single tag on the entry; may be null for older rows */
+  tag?: string | null
   /** RPC may omit when not returned */
   similarity?: number
 }

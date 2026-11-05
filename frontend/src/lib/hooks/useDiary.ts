@@ -1,38 +1,35 @@
 'use client'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { api, postChatPlainText, ragApi } from '@/lib/api'
 import { DiaryEntry, SearchResult } from '@/types/diary'
+import { useAuth } from '@/utils/auth-context'
 
 /** Single cache key for diary rows from GET /notes */
 export const DIARY_ENTRIES_QUERY_KEY = ['diaryEntries'] as const
 
-export function useDiary() {
-  const queryClient = useQueryClient()
+/** Single source of truth for reading every diary entry. */
+export async function fetchNotes(): Promise<DiaryEntry[]> {
+  const { data, error } = await api.notes.get()
+  if (error) throw new Error(String(error.value))
+  return (data ?? []) as DiaryEntry[]
+}
 
-  const { data: entries, isLoading: isLoadingEntries, refetch: refetchEntries } = useQuery({
+/**
+ * Read the signed-in user's diary entries.
+ * All readers share one cache entry, so the request runs once per cache lifetime.
+ */
+export function useDiaryEntries() {
+  const { user } = useAuth()
+  return useQuery({
     queryKey: DIARY_ENTRIES_QUERY_KEY,
-    queryFn: async () => {
-      const { data, error } = await api.notes.get()
-      if (error) throw new Error(String(error.value))
-      return data as DiaryEntry[]
-    },
+    enabled: !!user,
+    queryFn: fetchNotes,
   })
+}
 
-  const createEntry = useMutation({
-    mutationFn: async (input: { content: string; tag?: string }) => {
-      const { data, error } = await api.notes.post({
-        content: input.content,
-        tag: input.tag ?? 'General',
-      })
-      if (error) throw new Error(String(error.value))
-      return data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: DIARY_ENTRIES_QUERY_KEY })
-    },
-  })
-
+/** Semantic search + memory chat (mutations — no cached read, so no `useAuth` needed). */
+export function useDiary() {
   const semanticSearch = useMutation({
     mutationFn: async ({
       query,
@@ -53,12 +50,5 @@ export function useDiary() {
     mutationFn: async (query: string) => postChatPlainText(query),
   })
 
-  return {
-    entries,
-    isLoadingEntries,
-    refetchEntries,
-    createEntry,
-    semanticSearch,
-    chatWithEntries,
-  }
+  return { semanticSearch, chatWithEntries }
 }

@@ -2,6 +2,10 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { useState, type ReactNode } from "react"
+import { AuthProvider } from "@/utils/auth-context"
+import { ToastProvider } from "@/components/ui/toast"
+import { ConfirmProvider } from "@/components/ui/confirm"
+import { AiConsentProvider } from "@/components/ui/ai-consent"
 
 export default function Providers({ children }: { children: ReactNode }) {
     //make queryClient with useState to prevent re-build components when re-render
@@ -9,7 +13,15 @@ export default function Providers({ children }: { children: ReactNode }) {
 
     return (
         <QueryClientProvider client={queryClient}>
-            {children}
+            <ToastProvider>
+                <ConfirmProvider>
+                    <AiConsentProvider>
+                        <AuthProvider>
+                            {children}
+                        </AuthProvider>
+                    </AiConsentProvider>
+                </ConfirmProvider>
+            </ToastProvider>
         </QueryClientProvider>
     )
 }

@@ -3,94 +3,96 @@
 import { useState, useRef, useEffect } from 'react'
 import { useDiary } from '@/lib/hooks/useDiary'
 import { ChatMessage } from '@/types/diary'
+import { useRequireAuth } from '@/utils/auth-context'
+import { useAiConsent } from '@/components/ui/ai-consent'
+import { friendlyError } from '@/lib/errors'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export default function DiaryChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { chatWithEntries } = useDiary()
+  const ensureAuth = useRequireAuth()
+  const ensureConsent = useAiConsent()
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!ensureAuth()) return
     if (!input.trim() || chatWithEntries.isPending) return
+    if (!(await ensureConsent())) return
 
-    // Add user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: input,
-      timestamp: new Date()
+      timestamp: new Date(),
     }
 
-    setMessages(prev => [...prev, userMessage])
+    setMessages((prev) => [...prev, userMessage])
     setInput('')
 
     try {
-      // Get response from AI
       const response = await chatWithEntries.mutateAsync(input)
 
-      // For now, handle as text response
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: typeof response === 'string' ? response : 'Response received',
-        timestamp: new Date()
+        content: typeof response === 'string' ? response : 'ได้รับคำตอบแล้ว',
+        timestamp: new Date(),
       }
-
-      setMessages(prev => [...prev, assistantMessage])
-    } catch (error) {
-      // Add error message
+      setMessages((prev) => [...prev, assistantMessage])
+    } catch (err) {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error while processing your request.',
-        timestamp: new Date()
+        content: friendlyError(err, 'ขออภัย ระบบประมวลผลคำถามไม่สำเร็จ กรุณาลองใหม่'),
+        timestamp: new Date(),
       }
-      setMessages(prev => [...prev, errorMessage])
+      setMessages((prev) => [...prev, errorMessage])
     }
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg mb-8">
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-gray-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-teal-500">
-          💬 Memory Chat
-        </h3>
-        <p className="text-gray-500 text-sm mt-1">Talk to your diary entries with AI</p>
-      </div>
+    <div className="pa-sheet flex h-full flex-col">
+      <p className="pa-label">ชวนคุยกับความทรงจำ</p>
+      <h3 className="font-serif text-2xl font-semibold text-pa-ink">สนทนากับบันทึก</h3>
+      <p className="mb-5 mt-1 text-sm text-pa-pencil">
+        ถามคำถามเกี่ยวกับสิ่งที่คุณเคยเขียนไว้ ระบบจะตอบโดยอ้างอิงจากบันทึกของคุณเท่านั้น
+      </p>
 
-      <div className="border rounded-xl h-96 flex flex-col">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex min-h-96 flex-1 flex-col rounded-md border border-pa-rule">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-pa-kraft p-4">
           {messages.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              <p>Start a conversation with your diary entries!</p>
-              <p className="text-sm mt-2">Try asking: "What did I write about my vacation?"</p>
+            <div className="py-8 text-center text-pa-pencil">
+              <p>เริ่มบทสนทนากับบันทึกของคุณได้เลย</p>
+              <p className="mt-2 text-sm">
+                ตัวอย่างคำถาม: &quot;ช่วงวันหยุดที่ผ่านมาฉันเขียนถึงอะไรไว้บ้าง?&quot;
+              </p>
             </div>
           ) : (
             messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                  className={`max-w-[80%] rounded-md border px-4 py-2 ${
                     message.role === 'user'
-                      ? 'bg-blue-500 text-white rounded-br-none'
-                      : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                      ? 'border-pa-inkblue bg-pa-inkblue text-pa-page'
+                      : 'border-pa-rule bg-pa-page text-pa-ink'
                   }`}
                 >
-                  <p>{message.content}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {message.timestamp.toLocaleTimeString([], {
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  <p className="mt-1 text-xs opacity-70">
+                    {message.timestamp.toLocaleTimeString('th-TH', {
                       hour: '2-digit',
-                      minute: '2-digit'
+                      minute: '2-digit',
                     })}
                   </p>
                 </div>
@@ -99,35 +101,30 @@ export default function DiaryChat() {
           )}
           {chatWithEntries.isPending && (
             <div className="flex justify-start">
-              <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-bl-none px-4 py-2">
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
-                </div>
+              <div className="rounded-md border border-pa-rule bg-pa-page px-4 py-2 text-pa-pencil">
+                กำลังคิด…
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSubmit} className="border-t p-4">
-          <div className="flex gap-2">
-            <input
+        <form onSubmit={handleSubmit} className="border-t border-pa-rule bg-pa-page p-4">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about your memories..."
-              className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none text-gray-700"
+              placeholder="ถามเกี่ยวกับความทรงจำของคุณ…"
               disabled={chatWithEntries.isPending}
             />
-            <button
+            <Button
               type="submit"
+              variant="secondary"
               disabled={chatWithEntries.isPending || !input.trim()}
-              className="bg-gradient-to-r from-blue-500 to-teal-500 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:shadow-lg transition-all disabled:opacity-50"
             >
-              Send
-            </button>
+              ส่ง
+            </Button>
           </div>
         </form>
       </div>

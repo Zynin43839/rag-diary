@@ -1,31 +1,25 @@
 'use client'
 
 import { api } from '@/lib/api'
-import { DIARY_ENTRIES_QUERY_KEY } from '@/lib/hooks/useDiary'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { DIARY_ENTRIES_QUERY_KEY, useDiaryEntries } from '@/lib/hooks/useDiary'
+import { DiaryEntry } from '@/types/diary'
+import { useToast } from '@/components/ui/toast'
+import { useConfirm } from '@/components/ui/confirm'
+import { friendlyError } from '@/lib/errors'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-
-interface Note {
-  id: string
-  content: string
-  tag: string
-  created_at: string
-}
+import { useAuth } from '@/utils/auth-context'
 
 export default function DiaryList() {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
   const [editTag, setEditTag] = useState('')
+  const toast = useToast()
+  const confirm = useConfirm()
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: DIARY_ENTRIES_QUERY_KEY,
-    queryFn: async () => {
-      const { data, error } = await api.notes.get()
-      if (error) throw new Error(String(error.value))
-      return data as Note[]
-    },
-  })
+  const { data, isLoading, error } = useDiaryEntries()
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -34,34 +28,29 @@ export default function DiaryList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DIARY_ENTRIES_QUERY_KEY })
-      alert('This memory has been let go.')
+      toast.success('ลบบันทึกนี้แล้ว')
+    },
+    onError: (err) => {
+      toast.error(friendlyError(err, 'ลบบันทึกไม่สำเร็จ กรุณาลองใหม่'))
     },
   })
 
   const updateMutation = useMutation({
-    mutationFn: async ({
-      id,
-      content,
-      tag,
-    }: {
-      id: string
-      content: string
-      tag: string
-    }) => {
+    mutationFn: async ({ id, content, tag }: { id: string; content: string; tag: string }) => {
       const { error } = await api.notes({ id }).patch({ content, tag })
       if (error) throw new Error(String(error.value))
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DIARY_ENTRIES_QUERY_KEY })
       setEditingId(null)
+      toast.success('บันทึกการแก้ไขแล้ว')
     },
     onError: (err) => {
-      console.error('Save Error:', err)
-      alert('Save failed: ' + (err instanceof Error ? err.message : String(err)))
+      toast.error(friendlyError(err, 'บันทึกการแก้ไขไม่สำเร็จ กรุณาลองใหม่'))
     },
   })
 
-  const startEdit = (note: Note) => {
+  const startEdit = (note: DiaryEntry) => {
     setEditingId(note.id)
     setEditContent(note.content)
     setEditTag(note.tag || '')
@@ -71,92 +60,105 @@ export default function DiaryList() {
     updateMutation.mutate({ id, content: editContent, tag: editTag })
   }
 
+  if (!user) {
+    return (
+      <div className="pa-sheet text-center text-pa-pencil">
+        เข้าสู่ระบบเพื่อดูบันทึกของคุณ
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
-      <div className="text-center py-10 text-gray-500 animate-pulse">
-        Gathering the fragments of my memories..⌛⌛
+      <div className="pa-sheet animate-pulse text-center text-pa-pencil">
+        กำลังรวบรวมความทรงจำของคุณ…
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 text-red-400 rounded-lg text-center">
-        We found error: {error.message}
+      <div className="border border-pa-clay bg-pa-page p-4 text-center font-semibold text-pa-clay">
+        เกิดข้อผิดพลาด: {friendlyError(error, 'โหลดบันทึกไม่สำเร็จ กรุณาลองใหม่')}
       </div>
     )
   }
 
   if (!data || data.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-400">
-        A blank page awaits. Start your first story today!
+      <div className="pa-note text-center font-serif text-lg text-pa-ink">
+        ยังไม่มีบันทึก เริ่มเรื่องแรกของคุณวันนี้เลย
       </div>
     )
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Echoes of Yesterday</h2>
+      <div>
+        <p className="pa-label">หน้าที่ผ่านมา</p>
+        <h2 className="font-serif text-2xl font-semibold text-pa-ink">
+          เสียงสะท้อนจากวันวาน
+        </h2>
+      </div>
+
       {data.map((note) => (
-        <div
-          key={note.id}
-          className="p-4 border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white"
-        >
+        <div key={note.id} className="pa-sheet pa-margin">
           {editingId === note.id ? (
             <div className="space-y-3">
               <textarea
                 value={editContent}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  setEditContent(e.target.value)
-                }
-                className="w-full p-2 border round-md focus:ring-2 focus: ring-blue-500 outline-none"
+                onChange={(e) => setEditContent(e.target.value)}
+                className="pa-field min-h-[110px] resize-y"
                 rows={3}
               />
-              <div className="flex gap-2 justify-end">
+              <div className="flex justify-end gap-2">
                 <button
                   type="button"
+                  className="pa-btn pa-btn-stamp"
                   onClick={() => setEditingId(null)}
-                  className="px-3 py-1 text-sm text-gray-500 hover:bg-gray-100 rounded"
                 >
-                  Cancel
+                  ยกเลิก
                 </button>
                 <button
+                  type="button"
+                  className="pa-btn pa-btn-ink"
                   onClick={() => saveEdit(note.id)}
                   disabled={updateMutation.isPending}
-                  className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
                 >
-                  {updateMutation.isPending ? 'Saving...' : 'save'}
+                  {updateMutation.isPending ? 'กำลังบันทึก…' : 'บันทึก'}
                 </button>
               </div>
             </div>
           ) : (
             <>
-              <p className="text-gray-700 whitespace-pre-wrap">{note.content}</p>
-              <div className="mt-4 flex justify-between items-center pt-2 border-t border-gray-50">
-                <span className="text-xs text-gray-400">
+              <p className="whitespace-pre-wrap text-pa-ink">{note.content}</p>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-pa-rule pt-3">
+                <span className="font-mono text-xs text-pa-pencil">
                   {new Date(note.created_at).toLocaleString('th-TH')}
                 </span>
-
                 <div className="flex gap-2">
                   <button
                     type="button"
+                    className="pa-btn pa-btn-stamp"
                     onClick={() => startEdit(note)}
-                    className="text-xs text-blue-500 hover:text-blue-700 font-medium px-2 py-1 rounded hover:bg-blue-50"
                   >
-                    Edit
+                    แก้ไข
                   </button>
-
                   <button
                     type="button"
-                    onClick={() => {
-                      if (confirm('Did you want to blow this memory?')) {
-                        deleteMutation.mutate(note.id)
-                      }
+                    className="pa-btn pa-btn-danger"
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: 'ลบบันทึกนี้หรือไม่?',
+                        message: 'เมื่อลบแล้วจะกู้คืนไม่ได้',
+                        confirmLabel: 'ลบบันทึก',
+                        cancelLabel: 'ยกเลิก',
+                        danger: true,
+                      })
+                      if (ok) deleteMutation.mutate(note.id)
                     }}
-                    className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50"
                   >
-                    Delete 🗑️
+                    ลบ
                   </button>
                 </div>
               </div>

@@ -3,79 +3,128 @@
 import { useState } from 'react'
 import { useDiary } from '@/lib/hooks/useDiary'
 import { SearchResult } from '@/types/diary'
+import { useRequireAuth } from '@/utils/auth-context'
+import { useAiConsent } from '@/components/ui/ai-consent'
+import { friendlyError } from '@/lib/errors'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export default function SemanticSearch() {
   const [query, setQuery] = useState('')
+  const [selected, setSelected] = useState<SearchResult | null>(null)
   const { semanticSearch } = useDiary()
+  const ensureAuth = useRequireAuth()
+  const ensureConsent = useAiConsent()
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!ensureAuth()) return
+    if (!(await ensureConsent())) return
     if (query.trim()) {
       semanticSearch.mutate({ query: query.trim() })
     }
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg mb-8">
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-gray-800 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500">
-          🔍 Semantic Search
-        </h3>
-        <p className="text-gray-500 text-sm mt-1">Find related diary entries with natural language</p>
-      </div>
+    <div className="pa-sheet flex h-full flex-col">
+      <p className="pa-label">ค้นคืนความทรงจำ</p>
+      <h3 className="font-serif text-2xl font-semibold text-pa-ink">ค้นหาด้วยความหมาย</h3>
+      <p className="mb-5 mt-1 text-sm text-pa-pencil">
+        ค้นบันทึกด้วยความหมายของคำ ไม่ต้องจำคำให้ตรงกัน
+      </p>
 
       <form onSubmit={handleSearch} className="mb-6">
-        <div className="flex gap-2">
-          <input
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search your memories (e.g., 'vacation trips', 'happy moments')..."
-            className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-purple-200 outline-none text-gray-700"
+            placeholder="ลองพิมพ์สิ่งที่คุณจำได้ เช่น 'วันหยุด', 'ช่วงเวลามีความสุข'…"
             disabled={semanticSearch.isPending}
           />
-          <button
-            type="submit"
-            disabled={semanticSearch.isPending || !query.trim()}
-            className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:shadow-lg transition-all disabled:opacity-50"
-          >
-            {semanticSearch.isPending ? 'Searching...' : 'Search'}
-          </button>
+          <Button type="submit" variant="secondary" disabled={semanticSearch.isPending || !query.trim()}>
+            {semanticSearch.isPending ? 'กำลังค้นหา…' : 'ค้นหา'}
+          </Button>
         </div>
       </form>
 
       {semanticSearch.isSuccess && semanticSearch.data && (
-        <div className="space-y-4">
-          <h4 className="font-semibold text-gray-700">
-            Found {semanticSearch.data.length} relevant entries:
-          </h4>
-          <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-            {semanticSearch.data.map((result: SearchResult) => (
-              <div
-                key={result.id}
-                className="p-4 border rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs text-gray-500">
-                    {new Date(result.created_at).toLocaleDateString()}
-                  </span>
-                  <span className="text-xs font-medium bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
-                    {((result.similarity ?? 0) * 100).toFixed(1)}% match
-                  </span>
-                </div>
-                <p className="text-gray-700">{result.content}</p>
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          {semanticSearch.data.length > 0 ? (
+            <>
+              <h4 className="text-sm font-bold tracking-wide text-pa-ink">
+                พบ {semanticSearch.data.length} บันทึกที่เกี่ยวข้อง
+              </h4>
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+                {semanticSearch.data.map((result: SearchResult) => (
+                  <button
+                    key={result.id}
+                    type="button"
+                    onClick={() => setSelected(result)}
+                    className="w-full rounded-md border border-pa-rule bg-pa-page p-4 text-left transition-colors hover:bg-pa-highlighter focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-inkblue"
+                  >
+                    <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+                      <span className="font-mono text-xs text-pa-pencil">
+                        {new Date(result.created_at).toLocaleDateString('th-TH')}
+                      </span>
+                      <span className="rounded border border-pa-ink bg-pa-sticky px-2 py-0.5 text-xs font-bold text-pa-ink">
+                        ใกล้เคียง {((result.similarity ?? 0) * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <p className="line-clamp-3 whitespace-pre-wrap text-pa-ink">{result.content}</p>
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          ) : (
+            <div className="rounded-md border border-pa-rule bg-pa-page p-4 text-sm text-pa-ink">
+              <p className="font-semibold">ไม่พบบันทึกที่เกี่ยวข้อง</p>
+              <p className="mt-1 text-pa-pencil">
+                ลองใช้คำอื่นที่กว้างขึ้น หรือเพิ่มรายละเอียดในคำค้น
+                หากเพิ่งเพิ่มบันทึกใหม่ ดัชนีความหมายอาจยังเตรียมไม่เสร็จ ลองอีกครั้งในภายหลัง
+              </p>
+            </div>
+          )}
         </div>
       )}
 
       {semanticSearch.isError && (
-        <div className="text-red-500 text-center py-4">
-          Error:{' '}
-          {semanticSearch.error instanceof Error
-            ? semanticSearch.error.message
-            : 'Failed to search'}
+        <div
+          role="alert"
+          className="border border-pa-clay bg-pa-page p-3 text-center text-pa-clay"
+        >
+          {friendlyError(semanticSearch.error, 'ค้นหาไม่สำเร็จ กรุณาลองใหม่')}
+        </div>
+      )}
+
+      {selected && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-pa-ink/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="search-note-title"
+        >
+          <div className="pa-sheet flex max-h-[80vh] w-full max-w-lg flex-col">
+            <div className="mb-2 flex items-start justify-between gap-3">
+              <h2 id="search-note-title" className="font-serif text-xl font-semibold text-pa-ink">
+                บันทึกฉบับเต็ม
+              </h2>
+              <button
+                type="button"
+                className="text-sm font-bold text-pa-inkblue underline"
+                onClick={() => setSelected(null)}
+              >
+                ปิด
+              </button>
+            </div>
+            <p className="mb-3 font-mono text-xs text-pa-pencil">
+              {new Date(selected.created_at).toLocaleString('th-TH')}
+              {selected.tag ? ` · #${selected.tag}` : ''}
+            </p>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <p className="whitespace-pre-wrap text-pa-ink">{selected.content}</p>
+            </div>
+          </div>
         </div>
       )}
     </div>

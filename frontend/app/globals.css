@@ -2,138 +2,240 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+  Marginalia — paper journal design system for RAG-Diary
+  - Colors : ivory paper, warm ink, a single red margin, sticky-note yellow
+  - Type   : Latin-first stacks with Thai fallbacks
+             headings  Fraunces -> Taviraj
+             accents   Caveat -> Mali
+             body      Nunito -> Noto Sans Thai
+  - Surfaces: soft paper shadows, thin 1px rules, gently rounded corners
+*/
+
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --radius: 0.625rem;
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --sidebar-width: 4rem;
-  --sidebar-width-icon: 3rem;
+  /* Paper & ink */
+  --pa-paper: #fbf6ec;
+  --pa-page: #fffdf8;
+  --pa-kraft: #e7dcc6;
+  --pa-ink: #2a2620;
+  --pa-pencil: #6b6357;
+  --pa-faint: #9a9184;
+  --pa-rule: #e6dcc8;
+
+  /* Stationery accents */
+  --pa-margin: #c8553d;
+  --pa-inkblue: #2f5d8c;
+  --pa-sticky: #fbefa5;
+  --pa-highlighter: #fff2a8;
+  --pa-olive: #6b8e5a;
+  --pa-amber: #b9822e;
+  --pa-clay: #b4452e;
+
+  /* Paper shadows */
+  --pa-shadow-paper: 0 1px 2px rgba(42, 38, 32, 0.08);
+  --pa-shadow-lift: 0 4px 12px rgba(42, 38, 32, 0.1);
+  --pa-shadow-pin: 0 10px 18px rgba(42, 38, 32, 0.12);
+
+  --background: var(--pa-paper);
+  --foreground: var(--pa-ink);
 }
 
 @theme inline {
+  --color-pa-paper: var(--pa-paper);
+  --color-pa-page: var(--pa-page);
+  --color-pa-kraft: var(--pa-kraft);
+  --color-pa-ink: var(--pa-ink);
+  --color-pa-pencil: var(--pa-pencil);
+  --color-pa-faint: var(--pa-faint);
+  --color-pa-rule: var(--pa-rule);
+  --color-pa-margin: var(--pa-margin);
+  --color-pa-inkblue: var(--pa-inkblue);
+  --color-pa-sticky: var(--pa-sticky);
+  --color-pa-highlighter: var(--pa-highlighter);
+  --color-pa-olive: var(--pa-olive);
+  --color-pa-amber: var(--pa-amber);
+  --color-pa-clay: var(--pa-clay);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+
+  --font-sans: var(--font-nunito), var(--font-noto-thai);
+  --font-mono: var(--font-roboto-mono);
+  --font-serif: var(--font-fraunces), var(--font-taviraj);
+  --font-hand: var(--font-caveat), var(--font-mali);
+
+  --shadow-paper: var(--pa-shadow-paper);
+  --shadow-lift: var(--pa-shadow-lift);
+  --shadow-pin: var(--pa-shadow-pin);
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-4xl: 32px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+@theme {
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.1875rem;
+  --text-xl: 1.3125rem;
+  --text-2xl: 1.5625rem;
+  --text-3xl: 1.9375rem;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--pa-ink);
   }
   body {
-    @apply bg-background text-foreground;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-nunito), var(--font-noto-thai), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-fraunces), var(--font-taviraj), ui-serif, Georgia, serif;
+    line-height: 1.35;
+  }
+}
+
+@layer components {
+  /* Paper surfaces */
+  .pa-sheet {
+    background: var(--pa-page);
+    border: 1px solid var(--pa-rule);
+    border-radius: 10px;
+    box-shadow: var(--pa-shadow-paper);
+    padding: 1.5rem;
+  }
+  .pa-ruled {
+    background-color: var(--pa-page);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0 27px,
+      var(--pa-rule) 27px 28px
+    );
+    background-size: 100% 28px;
+  }
+  .pa-note {
+    background: var(--pa-sticky);
+    border-radius: 2px 8px 2px 8px;
+    box-shadow: var(--pa-shadow-pin);
+    padding: 1.25rem;
+  }
+  .pa-margin {
+    border-left: 2px solid var(--pa-margin);
+    padding-left: 1.25rem;
+  }
+  .pa-rule {
+    border-top: 1px solid var(--pa-rule);
+  }
+
+  /* Buttons */
+  .pa-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 1.25rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: background-color 0.15s, color 0.15s, transform 0.1s;
+  }
+  .pa-btn:disabled {
+    opacity: 0.6;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .pa-btn-ink {
+    background: var(--pa-inkblue);
+    color: var(--pa-page);
+    box-shadow: var(--pa-shadow-paper);
+  }
+  .pa-btn-ink:hover:not(:disabled) {
+    background: #26496f;
+  }
+  .pa-btn-ink:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .pa-btn-stamp {
+    background: transparent;
+    color: var(--pa-ink);
+    border: 2px solid var(--pa-ink);
+  }
+  .pa-btn-stamp:hover:not(:disabled) {
+    background: var(--pa-sticky);
+  }
+  .pa-btn-danger {
+    background: var(--pa-clay);
+    color: var(--pa-page);
+  }
+  .pa-btn-danger:hover:not(:disabled) {
+    background: #93361f;
+  }
+
+  /* Inputs & labels */
+  .pa-field {
+    width: 100%;
+    background-color: var(--pa-page);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0 27px,
+      var(--pa-rule) 27px 28px
+    );
+    background-size: 100% 28px;
+    border: 0;
+    border-bottom: 1px solid var(--pa-rule);
+    border-radius: 4px 4px 0 0;
+    padding: 0.75rem 0.95rem;
+    color: var(--pa-ink);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    outline: none;
+  }
+  .pa-field::placeholder {
+    color: var(--pa-pencil);
+  }
+  .pa-field:hover {
+    border-bottom-color: var(--pa-faint);
+  }
+  .pa-field:focus {
+    border-bottom: 2px solid var(--pa-margin);
+  }
+  .pa-label {
+    display: block;
+    font-family: var(--font-caveat), var(--font-mali), ui-serif, serif;
+    font-size: 1.3rem;
+    line-height: 1.35;
+    color: var(--pa-ink);
+    margin-bottom: 0.15rem;
+  }
+
+  /* Tags / tabs */
+  .pa-tab {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0 0.9rem;
+    border: 2px solid var(--pa-ink);
+    border-radius: 6px;
+    background: var(--pa-page);
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: background-color 0.15s;
+  }
+  .pa-tab:hover {
+    background: var(--pa-highlighter);
+  }
+  .pa-tab-active {
+    background: var(--pa-sticky);
   }
 }
