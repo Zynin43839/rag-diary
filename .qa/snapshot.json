@@ -1,0 +1,16 @@
+{
+ "kind": "json",
+ "created": "2026-11-05T00:10:12",
+ "data": {
+  "documents": 25,
+  "functional_requirements": 15,
+  "non_functional_requirements": 8,
+  "use_cases": 6,
+  "business_rules": 10,
+  "test_cases": 23,
+  "adrs": 8,
+  "change_requests": 8,
+  "api_endpoints": 13,
+  "traceability_percent": 100
+ }
+}

@@ -28,8 +28,47 @@ yarn-error.log*
 pnpm-debug.log*
 *.log
 
+#Runtime data (SQLite databases)
+data/
+content-agent/data/
+
+#Python venv / cache
+__pycache__/
+*.pyc
+.venv/
+venv/
+
 #System & Misc
 .DS_Store
 *.pem
 Thumbs.db
 
+#Private study material — must never be published (design / course / teaching)
+*-DESIGN.md
+LAYOUT-REDESIGN-OPTION1.md
+RAG-DIARY-COURSE.md
+RAG-Diary-Course.html
+FUNDAMENTALS.md
+HANDS_ON_TUTORIAL.md
+5 Full-Stack Exercises.md
+nb_answer.txt
+teaching-log.html
+notebooklm-protocol-from-trade-hub.md
+
+#Generated analysis artifacts
+graphify-out/
+
+#Private interview preparation - never publish
+interview-prep/
+
+#Policy A: keep the repo to code + QA config (private/generated stay local)
+docs/
+output/
+portfolio/
+content-agent/
+clip/
+.qa/reports/
+
+#Stray root npm files (frontend and server have their own package.json)
+/package.json
+/package-lock.json

@@ -1,0 +1,75 @@
+{
+  "project": "RAG-Diary",
+  "benchmark": {
+    "path": ".qa/benchmark.json",
+    "kind": "json"
+  },
+  "snapshot": ".qa/snapshot.json",
+  "report_dir": ".qa/reports",
+  "checks": {},
+  "docs": [
+    {
+      "name": "SRS",
+      "path": "docs/02-requirements/SRS.md",
+      "kind": "md",
+      "must": ["FR-15", "NFR-08"],
+      "must_regex": [],
+      "forbid_regex": ["OpenAI"],
+      "placeholders": ["TODO", "TBD", "FIXME", "???"]
+    },
+    {
+      "name": "API contract",
+      "path": "docs/04-design/API-CONTRACT.md",
+      "kind": "md",
+      "must": ["POST /auth/refresh"],
+      "must_regex": [],
+      "forbid_regex": [],
+      "placeholders": ["TODO", "TBD", "FIXME", "???"]
+    },
+    {
+      "name": "Traceability matrix",
+      "path": "docs/02-requirements/TRACEABILITY-MATRIX.md",
+      "kind": "md",
+      "must": ["TC-23", "ร้อยละ 100"],
+      "must_regex": [],
+      "forbid_regex": [],
+      "placeholders": ["TODO", "TBD", "FIXME", "???"]
+    },
+    {
+      "name": "Case study",
+      "path": "docs/00-case-study/CASE-STUDY.md",
+      "kind": "md",
+      "must": ["rag-diary-app.vercel.app", "rag-diary-api.vercel.app"],
+      "must_regex": [],
+      "forbid_regex": [],
+      "placeholders": ["TODO", "TBD", "FIXME", "???"]
+    },
+    {
+      "name": "Roadmap",
+      "path": "docs/06-delivery/ROADMAP.md",
+      "kind": "md",
+      "must": ["rag-diary-app.vercel.app", "rag-diary-api.vercel.app"],
+      "must_regex": [],
+      "forbid_regex": [],
+      "placeholders": ["TODO", "TBD", "FIXME", "???"]
+    }
+  ],
+  "commands": [
+    {
+      "name": "frontend typecheck",
+      "cmd": "node frontend/node_modules/typescript/bin/tsc --noEmit -p frontend",
+      "expect_exit": 0
+    },
+    {
+      "name": "server typecheck",
+      "cmd": "bunx tsc --noEmit -p server",
+      "expect_exit": 0
+    },
+    {
+      "name": "pdf count",
+      "cmd": "python scripts/qa_pdf_count.py",
+      "expect_exit": 0,
+      "expect_stdout": "PDFS: 25"
+    }
+  ]
+}
