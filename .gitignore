@@ -29,7 +29,7 @@ pnpm-debug.log*
 *.log
 
 #Runtime data (SQLite databases)
-data/
+/data/
 content-agent/data/
 
 #Python venv / cache
