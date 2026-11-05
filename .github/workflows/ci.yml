@@ -1,0 +1,48 @@
+# CI for the two deployable projects.
+#
+# The full QA checklist (`.qa/checklist.json`) runs locally, not here: the docs
+# set it verifies is private and intentionally gitignored, so a CI checkout does
+# not contain those files.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: bun install
+      - name: Typecheck
+        run: bunx tsc --noEmit
+      - name: Unit tests
+        run: bun test
+      - name: Build
+        run: bun run build
+
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: Typecheck
+        run: bunx tsc --noEmit
+      - name: Unit tests
+        run: bun test

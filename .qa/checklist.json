@@ -66,6 +66,16 @@
       "expect_exit": 0
     },
     {
+      "name": "frontend unit tests",
+      "cmd": "bun test frontend/tests",
+      "expect_exit": 0
+    },
+    {
+      "name": "server unit tests",
+      "cmd": "bun test server/tests",
+      "expect_exit": 0
+    },
+    {
       "name": "pdf count",
       "cmd": "python scripts/qa_pdf_count.py",
       "expect_exit": 0,

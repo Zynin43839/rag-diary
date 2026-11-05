@@ -1,25 +1,6 @@
 import { Elysia } from 'elysia';
 import { UnauthorizedError } from './auth';
-
-/**
- * Extracts a short, human-readable line from Elysia's validation payload.
- * Elysia hands over a JSON string such as
- * {"type":"validation","on":"body","property":"/password","message":"..."}.
- */
-function describeValidation(raw: string): string {
-    try {
-        const parsed = JSON.parse(raw) as {
-            property?: string;
-            message?: string;
-            found?: unknown;
-        };
-        const field = (parsed.property ?? '').replace(/^\//, '');
-        const detail = parsed.message ?? 'invalid value';
-        return field ? `Invalid ${field}: ${detail}` : detail;
-    } catch {
-        return raw;
-    }
-}
+import { describeValidation } from './validation-message';
 
 export const errorHandler = new Elysia()
     .onError({ as: 'global' }, ({ error, code, set }) => {
