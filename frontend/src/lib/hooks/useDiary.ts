@@ -33,7 +33,7 @@ export function useDiary() {
   const semanticSearch = useMutation({
     mutationFn: async ({
       query,
-      threshold = 0.7,
+      threshold = 0.6,
       limit = 10,
     }: {
       query: string

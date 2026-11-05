@@ -58,7 +58,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 export async function findSimilarEntries(
     db: SupabaseClient,
     query: string,
-    threshold: number = 0.7,
+    threshold: number = 0.6,
     limit: number = 10
 ): Promise<MatchDiaryRow[]> {
     try {

@@ -27,7 +27,7 @@ export const aiRoutes = new Elysia()
             const results = await findSimilarEntries(
                 db,
                 body.query,
-                body.threshold ?? 0.7,
+                body.threshold ?? 0.6,
                 body.limit ?? 10
             );
             return results;
@@ -44,7 +44,7 @@ export const aiRoutes = new Elysia()
 
     .post("/chat", async ({ db, body }) => {
         try {
-            const relevantEntries = await findSimilarEntries(db, body.query, 0.7, 5);
+            const relevantEntries = await findSimilarEntries(db, body.query, 0.6, 5);
             const context = formatContext(relevantEntries);
 
             const provider = createOpenAI({
