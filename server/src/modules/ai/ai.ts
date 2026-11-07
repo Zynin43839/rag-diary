@@ -56,7 +56,10 @@ export const aiRoutes = new Elysia()
             });
 
             const result = streamText({
-                model: provider(CHAT_MODEL),
+                // `.chat()` forces the Chat Completions API. The provider's
+                // default call now targets the Responses API, which Gemini's
+                // OpenAI-compatible layer answers with 404.
+                model: provider.chat(CHAT_MODEL),
                 messages: [
                     {
                         role: 'system',
