@@ -68,7 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient])
 
   const logout = useCallback(() => {
-    apiLogout()
+    // Clearing local state is immediate; the server clears the httpOnly
+    // cookies in the background.
+    void apiLogout()
     // Drop any cached data belonging to the previous user so it can never be
     // shown to the next person who signs in on this device.
     queryClient.clear()

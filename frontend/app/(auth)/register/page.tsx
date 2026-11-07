@@ -35,7 +35,7 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       const result = await register(email, password)
-      if (result.session) {
+      if (result.user && !result.needsEmailConfirmation) {
         const params = new URLSearchParams(window.location.search)
         const next = params.get('next')
         const safeNext =

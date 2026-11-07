@@ -1,12 +1,7 @@
 'use client'
 
 import { API_BASE_URL } from './config'
-import {
-  clearSession,
-  getAccessToken,
-  refreshAccessToken,
-  setSession,
-} from './session'
+import { refreshAccessToken } from './session'
 
 export interface AuthUser {
   id: string
@@ -15,13 +10,13 @@ export interface AuthUser {
 
 export interface AuthResult {
   user: AuthUser | null
-  session: { access_token: string; refresh_token: string } | null
   needsEmailConfirmation?: boolean
 }
 
 async function postJson(path: string, body: unknown) {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
@@ -33,36 +28,26 @@ async function postJson(path: string, body: unknown) {
 }
 
 export async function register(email: string, password: string): Promise<AuthResult> {
-  const data = (await postJson('/auth/register', { email, password })) as AuthResult
-  if (data.session) setSession(data.session)
-  return data
+  return (await postJson('/auth/register', { email, password })) as AuthResult
 }
 
 export async function login(email: string, password: string): Promise<AuthResult> {
-  const data = (await postJson('/auth/login', { email, password })) as AuthResult
-  if (data.session) setSession(data.session)
-  return data
+  return (await postJson('/auth/login', { email, password })) as AuthResult
 }
 
-async function requestMe(token: string): Promise<Response> {
-  return fetch(`${API_BASE_URL}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
+async function requestMe(): Promise<Response> {
+  return fetch(`${API_BASE_URL}/auth/me`, { credentials: 'include' })
 }
 
 export async function fetchMe(): Promise<AuthUser | null> {
-  const token = getAccessToken()
-  if (!token) return null
   try {
-    let res = await requestMe(token)
+    let res = await requestMe()
     if (res.status === 401 && (await refreshAccessToken())) {
-      const fresh = getAccessToken()
-      if (fresh) res = await requestMe(fresh)
+      res = await requestMe()
     }
     if (!res.ok) {
-      // Only an explicit 401 after a refresh attempt invalidates the session;
-      // anything else (5xx / gateway error) is treated as "unknown".
-      if (res.status === 401) clearSession()
+      // Anything other than a successful refresh (5xx / gateway error) leaves
+      // the cookie alone and reports "unknown" instead of signing out.
       return null
     }
     const data = await res.json().catch(() => ({}))
@@ -73,6 +58,14 @@ export async function fetchMe(): Promise<AuthUser | null> {
   }
 }
 
-export function logout(): void {
-  clearSession()
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+  } catch {
+    // Clearing client state still signs this tab out; the cookie expires on
+    // its own if the network is down.
+  }
 }

@@ -1,25 +1,19 @@
 import { treaty } from '@elysiajs/eden'
-import {
-  authHeader,
-  getAccessToken,
-  getRefreshToken,
-  refreshAccessToken,
-} from './session'
+import { refreshAccessToken } from './session'
 import { API_BASE_URL } from './config'
 
 export { API_BASE_URL }
 
-// Inject the signed-in user's token and retry once after a refresh.
+/**
+ * The session cookie is the only credential now, so every call must include
+ * it. A single 401 triggers one refresh and one retry; the refresh call itself
+ * uses plain fetch, so this can never loop.
+ */
 const authFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-  const send = () => {
-    const headers = new Headers(init?.headers)
-    const token = getAccessToken()
-    if (token) headers.set('Authorization', `Bearer ${token}`)
-    return fetch(input, { ...init, headers })
-  }
+  const send = () => fetch(input, { ...init, credentials: 'include' })
 
   let res = await send()
-  if (res.status === 401 && getRefreshToken() && (await refreshAccessToken())) {
+  if (res.status === 401 && (await refreshAccessToken())) {
     res = await send()
   }
   return res
@@ -33,10 +27,10 @@ export const api = treaty(API_BASE_URL, { fetcher: authFetch } as any) as any
 export async function postChatPlainText(query: string): Promise<string> {
   const res = await fetch(`${API_BASE_URL}/chat`, {
     method: 'POST',
+    credentials: 'include',
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json',
-      ...authHeader(),
     },
     body: JSON.stringify({ query }),
   })

@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
 import { supabase, userClient } from './db';
+import { readSessionCookies } from './cookies';
 
 export class UnauthorizedError extends Error {
     constructor(message = 'Unauthorized') {
@@ -9,17 +10,26 @@ export class UnauthorizedError extends Error {
 }
 
 /**
- * Reads the `Authorization: Bearer <token>` header, verifies it against Supabase,
- * and returns the authenticated user together with a token-scoped DB client.
+ * Resolves the caller from the httpOnly session cookie, falling back to the
+ * `Authorization: Bearer <token>` header so scripts and older clients still
+ * work. The token is verified against Supabase before any data is touched.
  */
-export async function requireUser(headers: Record<string, string | undefined>) {
+export async function requireUser(
+    headers: Record<string, string | undefined>,
+    cookieAccessToken?: string | null
+) {
     const authHeader = headers['authorization'] ?? headers['Authorization'];
+    const headerToken =
+        authHeader && authHeader.startsWith('Bearer ')
+            ? authHeader.slice('Bearer '.length).trim()
+            : null;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new UnauthorizedError('Missing bearer token');
+    const token = headerToken || cookieAccessToken || null;
+
+    if (!token) {
+        throw new UnauthorizedError('Missing session token');
     }
 
-    const token = authHeader.slice('Bearer '.length).trim();
     const { data, error } = await supabase.auth.getUser(token);
 
     if (error || !data.user) {
@@ -31,13 +41,15 @@ export async function requireUser(headers: Record<string, string | undefined>) {
 
 /**
  * Scoped plugin: adds `user`, `token`, and a token-bound `db` client to every
- * route that uses it. Requests without a valid token are rejected with 401.
+ * route that uses it. Requests without a valid session are rejected with 401.
  */
 export const authGuard = new Elysia({ name: 'authGuard' }).derive(
     { as: 'scoped' },
-    async ({ headers }) => {
+    async ({ headers, cookie }) => {
+        const { accessToken } = readSessionCookies(cookie);
         const { user, token } = await requireUser(
-            headers as Record<string, string | undefined>
+            headers as Record<string, string | undefined>,
+            accessToken
         );
         return { user, token, db: userClient(token) };
     }

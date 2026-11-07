@@ -17,9 +17,16 @@ CHROME = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
 
 TARGETS = {
     'D-01-CASE-STUDY': r'00-case-study\CASE-STUDY.md',
+    'D-02-PRODUCT-BRIEF': r'01-discovery\PRODUCT-BRIEF.md',
+    'D-05-SRS': r'02-requirements\SRS.md',
     'D-09-TRACEABILITY-MATRIX': r'02-requirements\TRACEABILITY-MATRIX.md',
+    'D-11-C4-ARCHITECTURE': r'03-modeling\C4-ARCHITECTURE.md',
     'D-13-SEQUENCE-DIAGRAMS': r'03-modeling\SEQUENCE-DIAGRAMS.md',
+    'D-14-DFD-PRIVACY': r'03-modeling\DFD-PRIVACY.md',
     'D-16-API-CONTRACT': r'04-design\API-CONTRACT.md',
+    'D-17-ADR': r'04-design\ADR.md',
+    'D-18-NFR-SPEC': r'05-quality\NFR-SPEC.md',
+    'D-19-RISK-REGISTER': r'05-quality\RISK-REGISTER.md',
     'D-20-TEST-PLAN': r'05-quality\TEST-PLAN.md',
     'D-22-ROADMAP': r'06-delivery\ROADMAP.md',
 }

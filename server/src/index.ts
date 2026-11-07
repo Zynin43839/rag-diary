@@ -5,6 +5,7 @@ import { aiRoutes } from './modules/ai/ai';
 import { authRoutes } from './modules/user/auth';
 import { dataRoutes } from './modules/data/data';
 import { errorHandler } from './lib/error';
+import { isOriginAllowed, SAFE_METHODS } from './lib/origin';
 
 /**
  * Allowed browser origins. Set FRONTEND_ORIGIN to a comma-separated list in
@@ -24,6 +25,14 @@ const app = new Elysia()
         allowedHeaders: ['Content-Type', 'Authorization']
     }))
     .use(errorHandler)
+    .onBeforeHandle({ as: 'global' }, ({ request, headers, set }) => {
+        if (SAFE_METHODS.has(request.method)) return;
+
+        if (!isOriginAllowed(headers['origin'], headers['host'], allowedOrigins)) {
+            set.status = 403;
+            return { error: 'Origin not allowed' };
+        }
+    })
     .use(authRoutes)
     .use(noteRoutes)
     .use(dataRoutes)
