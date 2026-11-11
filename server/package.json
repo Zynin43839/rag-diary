@@ -6,6 +6,7 @@
     "dev": "bun run --watch src/index.ts",
     "check:supabase": "bun run scripts/check-supabase.ts",
     "check:rate-limit": "bun run scripts/check-rate-limit.ts",
+    "load-test": "bun run scripts/load-test.ts",
     "apply:schema": "bun run scripts/apply-schema.ts"
   },
   "dependencies": {
