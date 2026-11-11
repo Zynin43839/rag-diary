@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Copy the generated PDFs into the portfolio site and rebuild the docs bundle.
+"""Copy the generated PDFs into the BA/SA portfolio site and rebuild both bundles.
 
 Run after `scripts/build_docs_pdf.py` so the public site never serves an older
-PDF than the one in output/pdf.
+PDF than the one in output/pdf. The portfolio lives in its own repository
+(sibling folder `ba-portfolio`), so the path is resolved from this project's
+parent directory.
 """
 import hashlib
 import os
@@ -10,9 +12,13 @@ import shutil
 import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'output', 'pdf')
-DOCS = os.path.join(ROOT, 'portfolio', 'assets', 'docs')
-ZIP_PATH = os.path.join(ROOT, 'portfolio', 'assets', 'media', 'RAG-Diary-Docs.zip')
+SRC_TH = os.path.join(ROOT, 'output', 'pdf')
+SRC_EN = os.path.join(ROOT, 'output', 'pdf', 'en')
+
+PORTFOLIO = os.path.join(os.path.dirname(ROOT), 'ba-portfolio')
+DOCS_TH = os.path.join(PORTFOLIO, 'assets', 'docs')
+DOCS_EN = os.path.join(DOCS_TH, 'en')
+MEDIA = os.path.join(PORTFOLIO, 'assets', 'media')
 
 
 def digest(path):
@@ -20,29 +26,45 @@ def digest(path):
         return hashlib.sha256(f.read()).hexdigest()
 
 
-def main():
-    os.makedirs(DOCS, exist_ok=True)
-    names = sorted(n for n in os.listdir(SRC) if n.lower().endswith('.pdf'))
+def sync(src_dir, dst_dir, label):
+    os.makedirs(dst_dir, exist_ok=True)
+    names = sorted(n for n in os.listdir(src_dir) if n.lower().endswith('.pdf'))
     if not names:
-        raise SystemExit('no PDFs in output/pdf - run build_docs_pdf.py first')
+        raise SystemExit('no PDFs in %s - run build_docs_pdf.py first' % src_dir)
 
     copied = 0
     for name in names:
-        src = os.path.join(SRC, name)
-        dst = os.path.join(DOCS, name)
+        src = os.path.join(src_dir, name)
+        dst = os.path.join(dst_dir, name)
         same = os.path.exists(dst) and digest(src) == digest(dst)
         if not same:
             shutil.copy2(src, dst)
             copied += 1
-        print('%-34s %s' % (name, 'unchanged' if same else 'updated'), flush=True)
+        print('%-8s %-34s %s' % (label, name, 'unchanged' if same else 'updated'),
+              flush=True)
+    print('%s: copied %d/%d PDFs' % (label, copied, len(names)))
+    return names
 
-    # Rebuild the downloadable bundle with the same flat layout as before.
-    with zipfile.ZipFile(ZIP_PATH, 'w', zipfile.ZIP_DEFLATED) as z:
+
+def bundle(src_dir, names, dest):
+    with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as z:
         for name in names:
-            z.write(os.path.join(SRC, name), arcname=name)
+            z.write(os.path.join(src_dir, name), arcname=name)
+    print('bundle: %s (%.1f MB)' % (os.path.basename(dest),
+                                    os.path.getsize(dest) / 1048576))
 
-    print('copied %d/%d PDFs' % (copied, len(names)))
-    print('bundle: %s (%.1f MB)' % (ZIP_PATH, os.path.getsize(ZIP_PATH) / 1048576))
+
+def main():
+    if not os.path.isdir(PORTFOLIO):
+        raise SystemExit('portfolio not found at %s - check the folder layout'
+                         % PORTFOLIO)
+
+    th_names = sync(SRC_TH, DOCS_TH, 'TH')
+    en_names = sync(SRC_EN, DOCS_EN, 'EN')
+
+    os.makedirs(MEDIA, exist_ok=True)
+    bundle(SRC_TH, th_names, os.path.join(MEDIA, 'RAG-Diary-Docs.zip'))
+    bundle(SRC_EN, en_names, os.path.join(MEDIA, 'RAG-Diary-Docs-EN.zip'))
 
 
 if __name__ == '__main__':

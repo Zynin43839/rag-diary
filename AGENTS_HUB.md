@@ -25,7 +25,7 @@ RAG-Diary/
 │   ├── 04-design/               #   UI-WIREFRAMES, API-CONTRACT, ADR
 │   ├── 05-quality/              #   NFR-SPEC, RISK-REGISTER, TEST-PLAN, UAT
 │   └── 06-delivery/             #   ROADMAP, CHANGE-REQUEST-LOG, GLOSSARY
-├── portfolio/                   # Static BA/SA portfolio site (HTML/CSS, Vercel)     [deploy]
+├── portfolio/                   # moved out: own repo ../ba-portfolio (Vercel)  [external]
 ├── output/                      # Generated artifacts                                 [generated]
 │   ├── pdf/                     #   25 PDF exports (D-00..D-24)
 │   ├── presentation/            #   project deck (PPTX + HTML + build sources + README)
