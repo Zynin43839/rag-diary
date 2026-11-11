@@ -3,21 +3,25 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/utils/auth-context'
+import { useT } from '@/lib/i18n'
+import { LocaleToggle } from './locale-toggle'
 
-const TITLES: Record<string, string> = {
-  '/': 'RAG-Diary',
-  '/diary': 'ไดอารี่ของฉัน',
-  '/search': 'ค้นหาและสนทนา',
-  '/historyBoard': 'ประวัติบันทึก',
-  '/favorite': 'รายการโปรด',
-  '/setting': 'ตั้งค่า',
-  '/user': 'โปรไฟล์',
-}
+const TITLE_KEYS = {
+  '/': null,
+  '/diary': 'title.diary',
+  '/search': 'title.search',
+  '/historyBoard': 'title.history',
+  '/favorite': 'title.favorite',
+  '/setting': 'title.setting',
+  '/user': 'title.user',
+} as const
 
 export function TopBar() {
   const pathname = usePathname()
   const { user, loading } = useAuth()
-  const title = TITLES[pathname] ?? 'RAG-Diary'
+  const t = useT()
+  const key = TITLE_KEYS[pathname as keyof typeof TITLE_KEYS]
+  const title = key ? t(key) : 'RAG-Diary'
   const initial = (user?.email ?? 'G').charAt(0).toUpperCase()
 
   return (
@@ -28,11 +32,12 @@ export function TopBar() {
         </h1>
 
         <div className="flex shrink-0 items-center gap-2">
+          <LocaleToggle />
           {!loading &&
             (user ? (
               <Link
                 href="/user"
-                title={user.email ?? 'Profile'}
+                title={user.email ?? t('nav.profile')}
                 className="flex size-9 items-center justify-center rounded-md border border-pa-ink bg-pa-sticky font-bold text-pa-ink"
               >
                 {initial}
@@ -42,7 +47,7 @@ export function TopBar() {
                 href="/login"
                 className="inline-flex h-9 items-center rounded-md border border-pa-ink px-3 text-xs font-bold text-pa-ink hover:bg-pa-sticky"
               >
-                เข้าสู่ระบบ
+                {t('common.login')}
               </Link>
             ))}
         </div>

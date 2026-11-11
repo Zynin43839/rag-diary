@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useT } from '@/lib/i18n'
 
 export interface ConfirmOptions {
   title: string
@@ -26,6 +27,7 @@ const ConfirmContext = createContext<ConfirmFn | undefined>(undefined)
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [options, setOptions] = useState<ConfirmOptions | null>(null)
   const resolver = useRef<((value: boolean) => void) | null>(null)
+  const t = useT()
 
   const confirm = useCallback<ConfirmFn>((opts) => {
     setOptions(opts)
@@ -77,7 +79,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                 className="pa-btn pa-btn-stamp"
                 onClick={() => settle(false)}
               >
-                {options.cancelLabel ?? 'ยกเลิก'}
+                {options.cancelLabel ?? t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -85,7 +87,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                 className={`pa-btn ${options.danger ? 'pa-btn-danger' : 'pa-btn-ink'}`}
                 onClick={() => settle(true)}
               >
-                {options.confirmLabel ?? 'ยืนยัน'}
+                {options.confirmLabel ?? t('common.confirm')}
               </button>
             </div>
           </div>

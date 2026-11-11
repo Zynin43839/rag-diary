@@ -9,17 +9,19 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useT, type MessageKey } from "@/lib/i18n"
 
-const ITEMS = [
-  { href: "/", label: "หน้าแรก", icon: House },
-  { href: "/diary", label: "ไดอารี่", icon: PenLine },
-  { href: "/search", label: "ค้นหา", icon: CalendarSearch },
-  { href: "/historyBoard", label: "ประวัติ", icon: FileStack },
-  { href: "/user", label: "บัญชี", icon: CircleUserRound },
+const ITEMS: { href: string; labelKey: MessageKey; icon: typeof House }[] = [
+  { href: "/", labelKey: "nav.home", icon: House },
+  { href: "/diary", labelKey: "nav.diary", icon: PenLine },
+  { href: "/search", labelKey: "nav.search", icon: CalendarSearch },
+  { href: "/historyBoard", labelKey: "nav.history", icon: FileStack },
+  { href: "/user", labelKey: "nav.account", icon: CircleUserRound },
 ]
 
 export function MobileNav() {
   const pathname = usePathname()
+  const t = useT()
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href)
@@ -27,9 +29,9 @@ export function MobileNav() {
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-50 flex border-t border-pa-rule bg-pa-page pb-[env(safe-area-inset-bottom)] md:hidden"
-      aria-label="เมนูหลัก"
+      aria-label={t('nav.mainMenu')}
     >
-      {ITEMS.map(({ href, label, icon: Icon }) => {
+      {ITEMS.map(({ href, labelKey, icon: Icon }) => {
         const active = isActive(href)
         return (
           <Link
@@ -41,9 +43,7 @@ export function MobileNav() {
             }`}
           >
             <Icon className="size-5" />
-            <span className="text-[10px] font-bold tracking-wide">
-              {label}
-            </span>
+            <span className="text-[10px] font-bold tracking-wide">{t(labelKey)}</span>
           </Link>
         )
       })}

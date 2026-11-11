@@ -8,6 +8,8 @@ import { DIARY_ENTRIES_QUERY_KEY } from '@/lib/hooks/useDiary'
 import { api } from '@/lib/api'
 import { hasAiConsent, revokeAiConsent } from '@/lib/consent'
 import { friendlyError } from '@/lib/errors'
+import { useT } from '@/lib/i18n'
+import { LocaleToggle } from '@/components/layout/locale-toggle'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
 import { useConfirm } from '@/components/ui/confirm'
@@ -18,6 +20,7 @@ export default function SettingPage() {
   const queryClient = useQueryClient()
   const toast = useToast()
   const confirm = useConfirm()
+  const t = useT()
   const [busy, setBusy] = useState(false)
   const [aiConsent, setAiConsent] = useState(() => hasAiConsent())
 
@@ -45,7 +48,7 @@ export default function SettingPage() {
       a.click()
       URL.revokeObjectURL(url)
     } catch (e) {
-      toast.error(friendlyError(e, 'ส่งออกข้อมูลไม่สำเร็จ กรุณาลองใหม่'))
+      toast.error(t(friendlyError(e, 'setting.exportFailed')))
     } finally {
       setBusy(false)
     }
@@ -57,10 +60,10 @@ export default function SettingPage() {
       return
     }
     const ok = await confirm({
-      title: 'ลบบันทึกทั้งหมดหรือไม่?',
-      message: 'บันทึกทุกฉบับของคุณจะถูกลบถาวรและกู้คืนไม่ได้',
-      confirmLabel: 'ลบทั้งหมด',
-      cancelLabel: 'ยกเลิก',
+      title: t('setting.deleteAllTitle'),
+      message: t('setting.deleteAllMessage'),
+      confirmLabel: t('setting.deleteAllConfirm'),
+      cancelLabel: t('common.cancel'),
       danger: true,
     })
     if (!ok) return
@@ -69,9 +72,9 @@ export default function SettingPage() {
       const { data, error } = await api.data.delete()
       if (error) throw new Error(String(error.value))
       queryClient.invalidateQueries({ queryKey: DIARY_ENTRIES_QUERY_KEY })
-      toast.success(`ลบบันทึกแล้ว ${data?.deleted ?? 0} รายการ`)
+      toast.success(t('setting.deletedCount', { count: data?.deleted ?? 0 }))
     } catch (e) {
-      toast.error(friendlyError(e, 'ลบข้อมูลไม่สำเร็จ กรุณาลองใหม่'))
+      toast.error(t(friendlyError(e, 'setting.deleteFailed')))
     } finally {
       setBusy(false)
     }
@@ -80,65 +83,66 @@ export default function SettingPage() {
   function handleRevokeConsent() {
     revokeAiConsent()
     setAiConsent(false)
-    toast.success('เพิกถอนความยินยอมแล้ว ระบบจะขอความยินยอมอีกครั้งก่อนใช้ฟีเจอร์ AI ครั้งถัดไป')
+    toast.success(t('setting.revoked'))
   }
 
   return (
     <>
       <section className="pa-sheet mb-6">
-        <h2 className="mb-4 font-serif text-xl font-semibold text-pa-ink">บัญชี</h2>
+        <h2 className="mb-4 font-serif text-xl font-semibold text-pa-ink">{t('setting.account')}</h2>
         <div className="mb-4 rounded-md border border-pa-rule bg-pa-kraft p-4">
-          <p className="pa-label">เข้าสู่ระบบด้วย</p>
-          <p className="break-all font-semibold text-pa-ink">{user?.email ?? 'ยังไม่ได้เข้าสู่ระบบ'}</p>
+          <p className="pa-label">{t('setting.signedInWith')}</p>
+          <p className="break-all font-semibold text-pa-ink">
+            {user?.email ?? t('setting.notSignedIn')}
+          </p>
+        </div>
+        <div className="mb-4 flex items-center gap-3">
+          <span className="pa-label mb-0">{t('common.language')}</span>
+          <LocaleToggle />
         </div>
         {user ? (
           <Button variant="outline" onClick={handleLogout}>
-            ออกจากระบบ
+            {t('common.logout')}
           </Button>
         ) : (
-          <Button onClick={() => router.push('/login')}>เข้าสู่ระบบ</Button>
+          <Button onClick={() => router.push('/login')}>{t('common.login')}</Button>
         )}
       </section>
 
       <section className="pa-sheet mb-6">
-        <h2 className="mb-4 font-serif text-xl font-semibold text-pa-ink">ข้อมูลของคุณ</h2>
-        <p className="mb-4 text-sm text-pa-pencil">
-          ดาวน์โหลดบันทึกทุกฉบับเป็นไฟล์ JSON เพื่อเก็บสำรองหรือย้ายข้อมูล
-        </p>
+        <h2 className="mb-4 font-serif text-xl font-semibold text-pa-ink">{t('setting.data')}</h2>
+        <p className="mb-4 text-sm text-pa-pencil">{t('setting.exportDesc')}</p>
         <Button variant="secondary" onClick={handleExport} disabled={busy || !user}>
-          ส่งออกบันทึก (JSON)
+          {t('setting.export')}
         </Button>
       </section>
 
       <section className="pa-sheet mb-6">
-        <h2 className="mb-2 font-serif text-xl font-semibold text-pa-ink">ความยินยอมใช้ AI</h2>
-        <p className="mb-4 text-sm text-pa-pencil">
-          ฟีเจอร์ค้นหาด้วยความหมาย สนทนา สรุปอารมณ์ และสร้างภาพ
-          ต้องส่งข้อความบันทึกของคุณไปประมวลผลยังผู้ให้บริการ AI ภายนอก
-        </p>
+        <h2 className="mb-2 font-serif text-xl font-semibold text-pa-ink">
+          {t('setting.consentTitle')}
+        </h2>
+        <p className="mb-4 text-sm text-pa-pencil">{t('setting.consentDesc')}</p>
         <p className="mb-4 text-sm font-semibold text-pa-ink">
-          สถานะ: {aiConsent ? 'ยินยอมแล้ว' : 'ยังไม่ยินยอม'}
+          {t('setting.consentStatus', {
+            status: aiConsent ? t('setting.consented') : t('setting.notConsented'),
+          })}
         </p>
         {aiConsent ? (
           <Button variant="outline" onClick={handleRevokeConsent}>
-            เพิกถอนความยินยอม
+            {t('setting.revoke')}
           </Button>
         ) : (
-          <p className="text-sm text-pa-pencil">
-            ระบบจะขอความยินยอมเมื่อคุณใช้ฟีเจอร์ AI ครั้งแรก
-          </p>
+          <p className="text-sm text-pa-pencil">{t('setting.consentHint')}</p>
         )}
       </section>
 
       <section className="pa-sheet border border-pa-clay">
         <h2 className="mb-2 font-serif text-xl font-semibold text-pa-clay">
-          พื้นที่อันตราย
+          {t('setting.danger')}
         </h2>
-        <p className="mb-4 text-sm text-pa-pencil">
-          ลบบันทึกทุกฉบับในไดอารี่อย่างถาวร เมื่อลบแล้วจะกู้คืนไม่ได้
-        </p>
+        <p className="mb-4 text-sm text-pa-pencil">{t('setting.dangerDesc')}</p>
         <Button variant="destructive" onClick={handleDeleteAll} disabled={busy || !user}>
-          ลบบันทึกทั้งหมด
+          {t('setting.deleteAll')}
         </Button>
       </section>
     </>

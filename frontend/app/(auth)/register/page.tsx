@@ -5,17 +5,20 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/utils/auth-context'
 import { friendlyError } from '@/lib/errors'
+import { useT, type MessageKey } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { LocaleToggle } from '@/components/layout/locale-toggle'
 
 export default function RegisterPage() {
   const { register } = useAuth()
   const router = useRouter()
+  const t = useT()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState('')
-  const [info, setInfo] = useState('')
+  const [error, setError] = useState<MessageKey | ''>('')
+  const [info, setInfo] = useState<MessageKey | ''>('')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -24,11 +27,11 @@ export default function RegisterPage() {
     setInfo('')
 
     if (password.length < 6) {
-      setError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร')
+      setError('auth.passwordTooShort')
       return
     }
     if (password !== confirm) {
-      setError('รหัสผ่านทั้งสองช่องไม่ตรงกัน')
+      setError('auth.passwordMismatch')
       return
     }
 
@@ -42,37 +45,40 @@ export default function RegisterPage() {
           next && next.startsWith('/') && !next.startsWith('//') ? next : '/'
         router.replace(safeNext)
       } else {
-        setInfo('สร้างบัญชีแล้ว กรุณาตรวจอีเมลเพื่อยืนยันตัวตน แล้วจึงเข้าสู่ระบบ')
+        setInfo('auth.checkEmail')
       }
     } catch (err) {
-      setError(friendlyError(err, 'สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่'))
+      setError(friendlyError(err, 'auth.registerFailed'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-pa-paper p-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-pa-paper p-4">
+      <div className="absolute right-4 top-4">
+        <LocaleToggle />
+      </div>
       <form onSubmit={handleSubmit} className="pa-sheet w-full max-w-sm p-8">
         <h1 className="text-center font-serif text-3xl font-semibold text-pa-ink">
-          สมัครสมาชิก
+          {t('auth.registerTitle')}
         </h1>
         <p className="mb-6 mt-1 text-center text-sm text-pa-pencil">
-          เริ่มไดอารี่ส่วนตัวของคุณ
+          {t('auth.registerSubtitle')}
         </p>
 
         {error && (
           <p role="alert" className="mb-4 border border-pa-clay bg-pa-page p-3 text-sm text-pa-clay">
-            {error}
+            {t(error)}
           </p>
         )}
         {info && (
           <p role="status" className="mb-4 border border-pa-rule bg-pa-sticky p-3 text-sm text-pa-ink">
-            {info}
+            {t(info)}
           </p>
         )}
 
-        <label className="pa-label">อีเมล</label>
+        <label className="pa-label">{t('auth.email')}</label>
         <Input
           className="mb-4"
           type="email"
@@ -82,34 +88,34 @@ export default function RegisterPage() {
           placeholder="you@example.com"
         />
 
-        <label className="pa-label">รหัสผ่าน</label>
+        <label className="pa-label">{t('auth.password')}</label>
         <Input
           className="mb-4"
           type="password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="อย่างน้อย 6 ตัวอักษร"
+          placeholder={t('auth.passwordPlaceholder')}
         />
 
-        <label className="pa-label">ยืนยันรหัสผ่าน</label>
+        <label className="pa-label">{t('auth.confirmPassword')}</label>
         <Input
           className="mb-6"
           type="password"
           required
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          placeholder="พิมพ์รหัสผ่านอีกครั้ง"
+          placeholder={t('auth.confirmPlaceholder')}
         />
 
         <Button type="submit" disabled={loading} className="w-full">
-          {loading ? 'กำลังสร้างบัญชี…' : 'สร้างบัญชี'}
+          {loading ? t('auth.registering') : t('auth.registerButton')}
         </Button>
 
         <p className="mt-6 text-center text-sm text-pa-pencil">
-          มีบัญชีอยู่แล้ว?{' '}
+          {t('auth.haveAccount')}{' '}
           <Link href="/login" className="font-bold text-pa-inkblue underline">
-            เข้าสู่ระบบ
+            {t('auth.loginButton')}
           </Link>
         </p>
       </form>

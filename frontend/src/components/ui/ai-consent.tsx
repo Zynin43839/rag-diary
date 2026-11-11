@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react'
 import { grantAiConsent, hasAiConsent } from '@/lib/consent'
+import { useT } from '@/lib/i18n'
 
 type EnsureFn = () => Promise<boolean>
 
@@ -23,6 +24,7 @@ const AiConsentContext = createContext<EnsureFn | undefined>(undefined)
 export function AiConsentProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
   const resolver = useRef<((value: boolean) => void) | null>(null)
+  const t = useT()
 
   const ensureAiConsent = useCallback<EnsureFn>(() => {
     if (hasAiConsent()) return Promise.resolve(true)
@@ -65,24 +67,19 @@ export function AiConsentProvider({ children }: { children: ReactNode }) {
               id="ai-consent-title"
               className="font-serif text-xl font-semibold text-pa-ink"
             >
-              ยินยอมก่อนใช้ฟีเจอร์ AI
+              {t('consent.title')}
             </h2>
             <p className="mt-3 text-sm text-pa-pencil">
-              ฟีเจอร์ค้นหาด้วยความหมาย สนทนากับบันทึก สรุปอารมณ์ และสร้างภาพ
-              ต้องส่งข้อความบันทึกของคุณไปประมวลผลยังผู้ให้บริการ AI ภายนอก (Google Gemini)
-              เพื่อสร้างเวกเตอร์ความหมาย สรุปข้อความ และภาพประกอบ
+              {t('consent.body1')} {t('consent.body2')} {t('consent.body3')}
             </p>
-            <p className="mt-3 text-sm text-pa-pencil">
-              ข้อมูลจะถูกส่งเฉพาะบันทึกของบัญชีคุณเท่านั้น และคุณสามารถส่งออกหรือลบข้อมูลทั้งหมดได้เอง
-              จากหน้าตั้งค่าหากต้องการเพิกถอนภายหลัง
-            </p>
+            <p className="mt-3 text-sm text-pa-pencil">{t('consent.body4')}</p>
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
                 className="pa-btn pa-btn-stamp"
                 onClick={() => settle(false)}
               >
-                ไม่ยินยอม
+                {t('consent.decline')}
               </button>
               <button
                 type="button"
@@ -90,7 +87,7 @@ export function AiConsentProvider({ children }: { children: ReactNode }) {
                 className="pa-btn pa-btn-ink"
                 onClick={() => settle(true)}
               >
-                ยินยอมและดำเนินการต่อ
+                {t('consent.accept')}
               </button>
             </div>
           </div>

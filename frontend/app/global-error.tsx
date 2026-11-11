@@ -1,5 +1,18 @@
 'use client'
 
+/** The root error page renders outside the providers, so it reads the stored
+ *  locale directly instead of using the i18n hook. */
+function pick(th: string, en: string): string {
+  try {
+    const saved = window.localStorage.getItem('rag_locale')
+    if (saved === 'en') return en
+    if (saved === 'th') return th
+    return (navigator.language || '').toLowerCase().startsWith('th') ? th : en
+  } catch {
+    return th
+  }
+}
+
 export default function GlobalError({
   reset,
 }: {
@@ -21,12 +34,17 @@ export default function GlobalError({
         }}
       >
         <div style={{ maxWidth: '28rem', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontSize: '3rem', color: '#c8553d' }}>หมึกหก</p>
+          <p style={{ margin: 0, fontSize: '3rem', color: '#c8553d' }}>
+            {pick('หมึกหก', 'Ink spill')}
+          </p>
           <h1 style={{ margin: '1rem 0 0', fontSize: '1.5rem' }}>
-            เปิดไดอารี่ไม่สำเร็จ
+            {pick('เปิดไดอารี่ไม่สำเร็จ', 'Could not open the diary')}
           </h1>
           <p style={{ marginTop: '0.5rem', color: '#6b6357' }}>
-            ระบบขัดข้องก่อนหน้าที่หน้าจะโหลดเสร็จ ลองโหลดหน้าใหม่แล้วมักจะหาย
+            {pick(
+              'ระบบขัดข้องก่อนหน้าที่หน้าจะโหลดเสร็จ ลองโหลดหน้าใหม่แล้วมักจะหาย',
+              'Something failed before the page finished loading. Reloading usually fixes it.'
+            )}
           </p>
           <button
             type="button"
@@ -43,7 +61,7 @@ export default function GlobalError({
               fontSize: '0.95rem',
             }}
           >
-            เข้าใหม่
+            {pick('เข้าใหม่', 'Reload')}
           </button>
           <button
             type="button"
@@ -61,7 +79,7 @@ export default function GlobalError({
               fontSize: '0.95rem',
             }}
           >
-            ลองอีกครั้ง
+            {pick('ลองอีกครั้ง', 'Try again')}
           </button>
         </div>
       </body>

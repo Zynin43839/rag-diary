@@ -14,17 +14,18 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useT, type MessageKey } from "@/lib/i18n"
 
-const NAV = [
-  { href: "/", label: "หน้าแรก", icon: House },
-  { href: "/diary", label: "ไดอารี่", icon: PenLine },
-  { href: "/search", label: "ค้นหา", icon: CalendarSearch },
-  { href: "/historyBoard", label: "ประวัติ", icon: FileStack },
+const NAV: { href: string; labelKey: MessageKey; icon: typeof House }[] = [
+  { href: "/", labelKey: "nav.home", icon: House },
+  { href: "/diary", labelKey: "nav.diary", icon: PenLine },
+  { href: "/search", labelKey: "nav.search", icon: CalendarSearch },
+  { href: "/historyBoard", labelKey: "nav.history", icon: FileStack },
 ]
 
-const FOOTER = [
-  { href: "/user", label: "บัญชี", icon: CircleUserRound },
-  { href: "/setting", label: "ตั้งค่า", icon: Settings },
+const FOOTER: { href: string; labelKey: MessageKey; icon: typeof House }[] = [
+  { href: "/user", labelKey: "nav.account", icon: CircleUserRound },
+  { href: "/setting", labelKey: "nav.settings", icon: Settings },
 ]
 
 const STORAGE_KEY = 'ragdiary.sidebar.collapsed'
@@ -101,6 +102,7 @@ function NavLink({
 export function AppSidebar() {
   const pathname = usePathname()
   const collapsed = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const t = useT()
 
   const toggle = () => writeCollapsed(!getSnapshot())
 
@@ -138,8 +140,8 @@ export function AppSidebar() {
           onClick={toggle}
           aria-expanded={!collapsed}
           aria-controls="app-sidebar-nav"
-          aria-label={collapsed ? "ขยายแถบด้านข้าง" : "ย่อแถบด้านข้าง"}
-          title={collapsed ? "ขยายแถบด้านข้าง" : "ย่อแถบด้านข้าง"}
+          aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
+          title={collapsed ? t('nav.expand') : t('nav.collapse')}
           className="flex size-8 shrink-0 items-center justify-center rounded-md border border-pa-rule text-pa-pencil transition-colors hover:bg-pa-sticky hover:text-pa-ink"
         >
           {collapsed ? <ChevronsRight className="size-4" /> : <ChevronsLeft className="size-4" />}
@@ -149,12 +151,14 @@ export function AppSidebar() {
       <nav
         id="app-sidebar-nav"
         className="flex w-full flex-col gap-1.5"
-        aria-label="เมนูหลัก"
+        aria-label={t('nav.mainMenu')}
       >
         {NAV.map((item) => (
           <NavLink
             key={item.href}
-            {...item}
+            href={item.href}
+            label={t(item.labelKey)}
+            icon={item.icon}
             active={isActive(item.href)}
             collapsed={collapsed}
           />
@@ -165,7 +169,9 @@ export function AppSidebar() {
         {FOOTER.map((item) => (
           <NavLink
             key={item.href}
-            {...item}
+            href={item.href}
+            label={t(item.labelKey)}
+            icon={item.icon}
             active={isActive(item.href)}
             collapsed={collapsed}
           />

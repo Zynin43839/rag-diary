@@ -2,11 +2,13 @@
 
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/utils/auth-context'
+import { useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 
 export default function UserPage() {
   const { user, logout } = useAuth()
   const router = useRouter()
+  const t = useT()
 
   function handleLogout() {
     logout()
@@ -23,19 +25,19 @@ export default function UserPage() {
             {initial}
           </div>
           <div className="min-w-0">
-            <p className="pa-label">อีเมล</p>
+            <p className="pa-label">{t('auth.email')}</p>
             <p className="break-all text-lg font-semibold text-pa-ink">
-              {user?.email ?? 'ยังไม่ได้เข้าสู่ระบบ'}
+              {user?.email ?? t('setting.notSignedIn')}
             </p>
           </div>
         </div>
 
         {user ? (
           <Button variant="outline" onClick={handleLogout}>
-            ออกจากระบบ
+            {t('common.logout')}
           </Button>
         ) : (
-          <Button onClick={() => router.push('/login')}>เข้าสู่ระบบ</Button>
+          <Button onClick={() => router.push('/login')}>{t('common.login')}</Button>
         )}
       </div>
     </>

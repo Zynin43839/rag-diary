@@ -6,6 +6,7 @@ import { DiaryEntry } from '@/types/diary'
 import { useToast } from '@/components/ui/toast'
 import { useConfirm } from '@/components/ui/confirm'
 import { friendlyError } from '@/lib/errors'
+import { useI18n } from '@/lib/i18n'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useAuth } from '@/utils/auth-context'
@@ -18,6 +19,7 @@ export default function DiaryList() {
   const [editTag, setEditTag] = useState('')
   const toast = useToast()
   const confirm = useConfirm()
+  const { t, locale } = useI18n()
 
   const { data, isLoading, error } = useDiaryEntries()
 
@@ -28,10 +30,10 @@ export default function DiaryList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DIARY_ENTRIES_QUERY_KEY })
-      toast.success('ลบบันทึกนี้แล้ว')
+      toast.success(t('diary.deleted'))
     },
     onError: (err) => {
-      toast.error(friendlyError(err, 'ลบบันทึกไม่สำเร็จ กรุณาลองใหม่'))
+      toast.error(t(friendlyError(err, 'diary.deleteFailed')))
     },
   })
 
@@ -43,10 +45,10 @@ export default function DiaryList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DIARY_ENTRIES_QUERY_KEY })
       setEditingId(null)
-      toast.success('บันทึกการแก้ไขแล้ว')
+      toast.success(t('diary.edited'))
     },
     onError: (err) => {
-      toast.error(friendlyError(err, 'บันทึกการแก้ไขไม่สำเร็จ กรุณาลองใหม่'))
+      toast.error(t(friendlyError(err, 'diary.editFailed')))
     },
   })
 
@@ -63,7 +65,7 @@ export default function DiaryList() {
   if (!user) {
     return (
       <div className="pa-sheet text-center text-pa-pencil">
-        เข้าสู่ระบบเพื่อดูบันทึกของคุณ
+        {t('diary.loginToView')}
       </div>
     )
   }
@@ -71,7 +73,7 @@ export default function DiaryList() {
   if (isLoading) {
     return (
       <div className="pa-sheet animate-pulse text-center text-pa-pencil">
-        กำลังรวบรวมความทรงจำของคุณ…
+        {t('common.loading')}
       </div>
     )
   }
@@ -79,7 +81,7 @@ export default function DiaryList() {
   if (error) {
     return (
       <div className="border border-pa-clay bg-pa-page p-4 text-center font-semibold text-pa-clay">
-        เกิดข้อผิดพลาด: {friendlyError(error, 'โหลดบันทึกไม่สำเร็จ กรุณาลองใหม่')}
+        {t('diary.errorPrefix', { message: t(friendlyError(error, 'diary.loadError')) })}
       </div>
     )
   }
@@ -87,7 +89,7 @@ export default function DiaryList() {
   if (!data || data.length === 0) {
     return (
       <div className="pa-note text-center font-serif text-lg text-pa-ink">
-        ยังไม่มีบันทึก เริ่มเรื่องแรกของคุณวันนี้เลย
+        {t('diary.empty')}
       </div>
     )
   }
@@ -95,9 +97,9 @@ export default function DiaryList() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="pa-label">หน้าที่ผ่านมา</p>
+        <p className="pa-label">{t('diary.pastPages')}</p>
         <h2 className="font-serif text-2xl font-semibold text-pa-ink">
-          เสียงสะท้อนจากวันวาน
+          {t('diary.pastSubtitle')}
         </h2>
       </div>
 
@@ -117,7 +119,7 @@ export default function DiaryList() {
                   className="pa-btn pa-btn-stamp"
                   onClick={() => setEditingId(null)}
                 >
-                  ยกเลิก
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="button"
@@ -125,7 +127,7 @@ export default function DiaryList() {
                   onClick={() => saveEdit(note.id)}
                   disabled={updateMutation.isPending}
                 >
-                  {updateMutation.isPending ? 'กำลังบันทึก…' : 'บันทึก'}
+                  {updateMutation.isPending ? t('common.saving') : t('common.save')}
                 </button>
               </div>
             </div>
@@ -134,7 +136,7 @@ export default function DiaryList() {
               <p className="whitespace-pre-wrap text-pa-ink">{note.content}</p>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-pa-rule pt-3">
                 <span className="font-mono text-xs text-pa-pencil">
-                  {new Date(note.created_at).toLocaleString('th-TH')}
+                  {new Date(note.created_at).toLocaleString(locale === 'th' ? 'th-TH' : 'en-GB')}
                 </span>
                 <div className="flex gap-2">
                   <button
@@ -142,23 +144,23 @@ export default function DiaryList() {
                     className="pa-btn pa-btn-stamp"
                     onClick={() => startEdit(note)}
                   >
-                    แก้ไข
+                    {t('common.edit')}
                   </button>
                   <button
                     type="button"
                     className="pa-btn pa-btn-danger"
                     onClick={async () => {
                       const ok = await confirm({
-                        title: 'ลบบันทึกนี้หรือไม่?',
-                        message: 'เมื่อลบแล้วจะกู้คืนไม่ได้',
-                        confirmLabel: 'ลบบันทึก',
-                        cancelLabel: 'ยกเลิก',
+                        title: t('diary.deleteTitle'),
+                        message: t('diary.deleteMessage'),
+                        confirmLabel: t('diary.deleteConfirm'),
+                        cancelLabel: t('common.cancel'),
                         danger: true,
                       })
                       if (ok) deleteMutation.mutate(note.id)
                     }}
                   >
-                    ลบ
+                    {t('common.delete')}
                   </button>
                 </div>
               </div>

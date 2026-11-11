@@ -1,15 +1,20 @@
+'use client'
+
 import Link from "next/link"
 import DiaryForm from "@/components/diary/diaryForm"
 import RecentPages from "@/components/diary/recentPages"
 import { CalendarSearch, FileStack, Settings } from "lucide-react"
+import { useT } from "@/lib/i18n"
 
 const LINKS = [
-  { href: "/search", label: "ค้นหาและสนทนา", desc: "ถามไดอารี่ของคุณ", icon: CalendarSearch },
-  { href: "/historyBoard", label: "ประวัติบันทึก", desc: "ดูบันทึกทั้งหมด", icon: FileStack },
-  { href: "/setting", label: "ตั้งค่า", desc: "บัญชีและข้อมูล", icon: Settings },
-]
+  { href: "/search", label: "home.searchTitle", desc: "home.searchDesc", icon: CalendarSearch },
+  { href: "/historyBoard", label: "home.historyTitle", desc: "home.historyDesc", icon: FileStack },
+  { href: "/setting", label: "home.settingsTitle", desc: "home.settingsDesc", icon: Settings },
+] as const
 
 export default function Home() {
+  const t = useT()
+
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2">
@@ -17,7 +22,7 @@ export default function Home() {
       </div>
 
       <aside
-        aria-label="ทางลัด"
+        aria-label={t('nav.shortcuts')}
         className="grid auto-rows-fr gap-3 md:grid-cols-3 lg:hidden"
       >
         {LINKS.map(({ href, label, desc, icon: Icon }) => (
@@ -30,8 +35,8 @@ export default function Home() {
               <Icon className="size-5" />
             </span>
             <span className="flex min-w-0 flex-col">
-              <span className="truncate font-semibold leading-tight text-pa-ink">{label}</span>
-              <span className="truncate text-sm text-pa-pencil">{desc}</span>
+              <span className="truncate font-semibold leading-tight text-pa-ink">{t(label)}</span>
+              <span className="truncate text-sm text-pa-pencil">{t(desc)}</span>
             </span>
           </Link>
         ))}

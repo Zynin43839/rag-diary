@@ -2,30 +2,30 @@ import { describe, test, expect } from 'bun:test'
 import { friendlyError } from '../src/lib/errors'
 
 describe('friendlyError', () => {
-  test('maps expired or missing auth to a session message', () => {
-    expect(friendlyError('missing bearer token')).toContain('เซสชันหมดอายุ')
-    expect(friendlyError(new Error('401 Unauthorized'))).toContain('เซสชันหมดอายุ')
+  test('maps expired or missing auth to a session key', () => {
+    expect(friendlyError('missing bearer token')).toBe('errors.session')
+    expect(friendlyError(new Error('401 Unauthorized'))).toBe('errors.session')
   })
 
   test('maps permission and not-found errors', () => {
-    expect(friendlyError('row-level security policy')).toContain('ไม่มีสิทธิ์')
-    expect(friendlyError('404 not found')).toContain('ไม่พบข้อมูล')
+    expect(friendlyError('row-level security policy')).toBe('errors.forbidden')
+    expect(friendlyError('404 not found')).toBe('errors.notFound')
   })
 
   test('maps quota and network failures', () => {
-    expect(friendlyError('429 quota exceeded')).toContain('ถี่เกินกำหนด')
-    expect(friendlyError('Failed to fetch')).toContain('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้')
+    expect(friendlyError('429 quota exceeded')).toBe('errors.rateLimit')
+    expect(friendlyError('Failed to fetch')).toBe('errors.network')
   })
 
   test('maps auth form errors', () => {
-    expect(friendlyError('Invalid login credentials')).toContain('อีเมลหรือรหัสผ่าน')
-    expect(friendlyError('User already registered')).toContain('ถูกใช้ไปแล้ว')
-    expect(friendlyError('Email not confirmed')).toContain('ยังไม่ได้ยืนยันอีเมล')
+    expect(friendlyError('Invalid login credentials')).toBe('errors.invalidCredentials')
+    expect(friendlyError('User already registered')).toBe('errors.emailTaken')
+    expect(friendlyError('Email not confirmed')).toBe('errors.emailUnconfirmed')
   })
 
-  test('returns the fallback for empty and unknown errors', () => {
-    expect(friendlyError('')).toBe('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
-    expect(friendlyError('something odd')).toBe('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
-    expect(friendlyError('something odd', 'custom')).toBe('custom')
+  test('returns the fallback key for empty and unknown errors', () => {
+    expect(friendlyError('')).toBe('errors.generic')
+    expect(friendlyError('something odd')).toBe('errors.generic')
+    expect(friendlyError('something odd', 'errors.ai')).toBe('errors.ai')
   })
 })

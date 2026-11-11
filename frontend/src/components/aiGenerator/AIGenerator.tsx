@@ -8,13 +8,16 @@ import Image from "next/image"
 import { useRequireAuth } from "@/utils/auth-context"
 import { useAiConsent } from "@/components/ui/ai-consent"
 import { friendlyError } from "@/lib/errors"
+import { useT, type MessageKey } from "@/lib/i18n"
 
-const SAMPLES = [
-  { src: "/samples/sample-1.png", alt: "แสงเช้าบนเนินเขา", caption: "แสงยามเช้า" },
-  { src: "/samples/sample-2.png", alt: "ทะเลยามเย็นกับเรือลำเล็ก", caption: "ทะเลยามเย็น" },
-  { src: "/samples/sample-3.png", alt: "ทางเดินบนภูเขาที่คดเคี้ยว", caption: "เดินเขา" },
-  { src: "/samples/sample-4.png", alt: "มุมอ่านหนังสือที่อบอุ่น", caption: "มุมอ่านหนังสือ" },
+const SAMPLES: { src: string; altKey: MessageKey; captionKey: MessageKey }[] = [
+  { src: "/samples/sample-1.png", altKey: "ai.sample1Alt", captionKey: "ai.sample1" },
+  { src: "/samples/sample-2.png", altKey: "ai.sample2Alt", captionKey: "ai.sample2" },
+  { src: "/samples/sample-3.png", altKey: "ai.sample3Alt", captionKey: "ai.sample3" },
+  { src: "/samples/sample-4.png", altKey: "ai.sample4Alt", captionKey: "ai.sample4" },
 ]
+
+type Stage = "idle" | "reviewing" | "drawing"
 
 export default function AIGenerator() {
   const [summary, setSummary] = useState("")
@@ -26,17 +29,19 @@ export default function AIGenerator() {
   const [selectedTag, setSelectedTag] = useState("All")
 
   const [loading, setLoading] = useState(false)
+  const [stage, setStage] = useState<Stage>("idle")
   const [step, setStep] = useState("")
 
   const ensureAuth = useRequireAuth()
   const ensureConsent = useAiConsent()
   const toast = useToast()
+  const t = useT()
 
   const { data: notes, error: notesError } = useDiaryEntries()
 
   const availableTags = useMemo(() => {
     if (!notes) return []
-    const tags = notes.map((note) => note.tag).filter((t) => t && t.trim() !== "")
+    const tags = notes.map((note) => note.tag).filter((tag) => tag && tag.trim() !== "")
     return Array.from(new Set(tags))
   }, [notes])
 
@@ -63,13 +68,14 @@ export default function AIGenerator() {
     const filteredNotes = filterNotes()
 
     if (filteredNotes.length === 0) {
-      toast.error('ไม่พบบันทึกในช่วงเวลาหรือแท็กที่เลือก ลองเปลี่ยนช่วงวันหรือแท็กดูอีกครั้ง')
+      toast.error(t('ai.noNotes'))
       return
     }
     if (!(await ensureConsent())) return
 
     setLoading(true)
-    setStep(`กำลังทบทวนความทรงจำ ${filteredNotes.length} รายการ…`)
+    setStage("reviewing")
+    setStep(t('ai.reviewing', { count: filteredNotes.length }))
     setSummary("")
     setGeneratedPrompt("")
     setImageUrl("")
@@ -84,25 +90,27 @@ export default function AIGenerator() {
       const parts = fullText.split("IMAGE_PROMPT:")
       setSummary(parts[0] || "")
       setGeneratedPrompt(parts[1] ? parts[1].trim() : "A peaceful diary scene, digital art")
-      setStep("สรุปความทรงจำเรียบร้อยแล้ว")
+      setStep(t('ai.reviewDone'))
     } catch (err) {
-      toast.error(friendlyError(err, 'สรุปอารมณ์ไม่สำเร็จ กรุณาลองใหม่'))
-      setStep("เกิดข้อผิดพลาด กรุณาลองใหม่")
+      toast.error(t(friendlyError(err, 'ai.summarizeFailed')))
+      setStep(t('ai.error'))
     } finally {
       setLoading(false)
+      setStage("idle")
     }
   }
 
   const handleGenerateImage = async () => {
     if (!ensureAuth()) return
     if (!generatedPrompt) {
-      toast.error("กรุณาสรุปเรื่องราวหรือใส่คำอธิบายภาพก่อนสร้างภาพ")
+      toast.error(t('ai.needSummary'))
       return
     }
     if (!(await ensureConsent())) return
 
     setLoading(true)
-    setStep("กำลังวาดภาพจากความทรงจำ…")
+    setStage("drawing")
+    setStep(t('ai.drawing'))
 
     try {
       const { data: imgData, error: imgError } = await api.ai.imagine.post({ prompt: generatedPrompt })
@@ -110,12 +118,13 @@ export default function AIGenerator() {
       if (!imgData) throw new Error("No image received")
 
       setImageUrl(imgData.imageUrl || "")
-      setStep("สร้างภาพเรียบร้อยแล้ว")
+      setStep(t('ai.imageDone'))
     } catch (err) {
-      toast.error(friendlyError(err, 'สร้างภาพไม่สำเร็จ กรุณาลองใหม่'))
-      setStep("เกิดข้อผิดพลาด กรุณาลองใหม่")
+      toast.error(t(friendlyError(err, 'ai.imageFailed')))
+      setStep(t('ai.error'))
     } finally {
       setLoading(false)
+      setStage("idle")
     }
   }
 
@@ -123,19 +132,17 @@ export default function AIGenerator() {
     <div className="pa-sheet">
       {notesError && (
         <p className="mb-4 border border-pa-clay bg-pa-page p-3 text-center text-sm text-pa-clay" role="alert">
-          โหลดบันทึกไม่สำเร็จ: {friendlyError(notesError, 'กรุณาลองใหม่')}
+          {t('ai.loadNotesFailed', { message: t(friendlyError(notesError, 'common.retry')) })}
         </p>
       )}
 
-      <p className="pa-label">ค่อย ๆ เขียนด้วยหมึก</p>
-      <h3 className="font-serif text-2xl font-semibold text-pa-ink">สตูดิโอความทรงจำ</h3>
-      <p className="mb-6 mt-1 text-sm text-pa-pencil">
-        รวมเรื่องราวของคุณให้เป็นหน้าความทรงจำหนึ่งหน้า
-      </p>
+      <p className="pa-label">{t('ai.label')}</p>
+      <h3 className="font-serif text-2xl font-semibold text-pa-ink">{t('ai.title')}</h3>
+      <p className="mb-6 mt-1 text-sm text-pa-pencil">{t('ai.subtitle')}</p>
 
       {!imageUrl && (
-        <section className="mb-6" aria-label="ตัวอย่างภาพ">
-          <p className="pa-label">หน้าความทรงจำที่เก็บไว้แล้ว</p>
+        <section className="mb-6" aria-label={t('ai.samplesLabel')}>
+          <p className="pa-label">{t('ai.samplesLabel')}</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {SAMPLES.map((sample) => (
               <figure
@@ -144,13 +151,13 @@ export default function AIGenerator() {
               >
                 <Image
                   src={sample.src}
-                  alt={sample.alt}
+                  alt={t(sample.altKey)}
                   width={800}
                   height={800}
                   className="h-auto w-full"
                 />
                 <figcaption className="px-2 py-1.5 text-xs text-pa-pencil">
-                  {sample.caption}
+                  {t(sample.captionKey)}
                 </figcaption>
               </figure>
             ))}
@@ -161,7 +168,7 @@ export default function AIGenerator() {
       <div className="mb-6 space-y-4 border border-pa-rule bg-pa-kraft p-4">
         <div className="flex flex-col gap-4 sm:flex-row">
           <div className="flex-1">
-            <label className="pa-label">ตั้งแต่</label>
+            <label className="pa-label">{t('ai.from')}</label>
             <input
               type="date"
               value={startDate}
@@ -170,7 +177,7 @@ export default function AIGenerator() {
             />
           </div>
           <div className="flex-1">
-            <label className="pa-label">ถึง</label>
+            <label className="pa-label">{t('ai.to')}</label>
             <input
               type="date"
               value={endDate}
@@ -181,16 +188,16 @@ export default function AIGenerator() {
         </div>
 
         <div>
-          <label className="pa-label">หมวด</label>
+          <label className="pa-label">{t('ai.tag')}</label>
           <div className="flex flex-wrap gap-2">
-            {["All", ...availableTags].map((t) => (
+            {["All", ...availableTags].map((tagValue) => (
               <button
-                key={t}
+                key={tagValue}
                 type="button"
-                onClick={() => setSelectedTag(t)}
-                className={`pa-tab ${selectedTag === t ? "pa-tab-active" : ""}`}
+                onClick={() => setSelectedTag(tagValue)}
+                className={`pa-tab ${selectedTag === tagValue ? "pa-tab-active" : ""}`}
               >
-                {t === "All" ? "ทั้งหมด" : `#${t}`}
+                {tagValue === "All" ? t('common.all') : `#${tagValue}`}
               </button>
             ))}
           </div>
@@ -199,14 +206,14 @@ export default function AIGenerator() {
 
       <div className="mb-6 flex justify-center">
         <button type="button" className="pa-btn pa-btn-ink" onClick={handleSummarize} disabled={loading}>
-          {loading && step.includes("ทบทวน") ? 'กำลังรวบรวมเรื่องราว…' : 'สรุปความทรงจำ'}
+          {loading && stage === "reviewing" ? t('ai.summarizing') : t('ai.summarize')}
         </button>
       </div>
 
       {(summary || generatedPrompt) && (
         <div className="space-y-4 border-t border-pa-rule pt-6">
           <div>
-            <label className="pa-label">สรุปจากบันทึกของคุณ</label>
+            <label className="pa-label">{t('ai.summaryLabel')}</label>
             <textarea
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
@@ -215,7 +222,7 @@ export default function AIGenerator() {
           </div>
 
           <div>
-            <label className="pa-label">แนวภาพ — ปรับแก้ได้ตามต้องการ</label>
+            <label className="pa-label">{t('ai.imagePromptLabel')}</label>
             <textarea
               value={generatedPrompt}
               onChange={(e) => setGeneratedPrompt(e.target.value)}
@@ -225,7 +232,7 @@ export default function AIGenerator() {
 
           <div className="flex justify-center pt-2">
             <button type="button" className="pa-btn pa-btn-stamp" onClick={handleGenerateImage} disabled={loading}>
-              {loading && step.includes("วาดภาพ") ? 'กำลังสร้างภาพ…' : 'สร้างภาพ'}
+              {loading && stage === "drawing" ? t('ai.creating') : t('ai.createImage')}
             </button>
           </div>
         </div>
@@ -233,11 +240,11 @@ export default function AIGenerator() {
 
       {imageUrl && (
         <div className="mt-8 text-center">
-          <p className="pa-label">ภาพจากความทรงจำของคุณ</p>
+          <p className="pa-label">{t('ai.saved')}</p>
           {/* The provider may return a data URL, which next/image cannot optimise. */}
           <img
             src={imageUrl}
-            alt="ภาพที่สร้างจากบันทึก"
+            alt={t('ai.resultAlt')}
             className="h-auto w-full rounded-md border border-pa-rule"
           />
         </div>
