@@ -8,6 +8,7 @@ import Image from "next/image"
 import { useRequireAuth } from "@/utils/auth-context"
 import { useAiConsent } from "@/components/ui/ai-consent"
 import { friendlyError } from "@/lib/errors"
+import { moodCardDataUrl } from "@/lib/mood-card"
 import { useT, type MessageKey } from "@/lib/i18n"
 
 const SAMPLES: { src: string; altKey: MessageKey; captionKey: MessageKey }[] = [
@@ -23,6 +24,8 @@ export default function AIGenerator() {
   const [summary, setSummary] = useState("")
   const [generatedPrompt, setGeneratedPrompt] = useState("")
   const [imageUrl, setImageUrl] = useState("")
+  const [imageIsLocal, setImageIsLocal] = useState(false)
+  const [imageUnavailable, setImageUnavailable] = useState(false)
 
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
@@ -79,6 +82,8 @@ export default function AIGenerator() {
     setSummary("")
     setGeneratedPrompt("")
     setImageUrl("")
+    setImageIsLocal(false)
+    setImageUnavailable(false)
 
     try {
       const { data: sumData, error: sumError } = await api.ai.summarize.post({ notes: filteredNotes })
@@ -114,10 +119,22 @@ export default function AIGenerator() {
 
     try {
       const { data: imgData, error: imgError } = await api.ai.imagine.post({ prompt: generatedPrompt })
-      if (imgError) throw new Error(String(imgError.value))
+      if (imgError) {
+        const body = (imgError as { value?: { code?: string; error?: string } }).value
+        // The provider's image quota is gone: explain it once, in place,
+        // and offer the on-device card instead of a dead end.
+        if (body?.code === 'image_unavailable') {
+          setImageUnavailable(true)
+          setStep("")
+          return
+        }
+        throw new Error(body?.error ?? 'Image generation failed')
+      }
       if (!imgData) throw new Error("No image received")
 
       setImageUrl(imgData.imageUrl || "")
+      setImageIsLocal(false)
+      setImageUnavailable(false)
       setStep(t('ai.imageDone'))
     } catch (err) {
       toast.error(t(friendlyError(err, 'ai.imageFailed')))
@@ -126,6 +143,19 @@ export default function AIGenerator() {
       setLoading(false)
       setStage("idle")
     }
+  }
+
+  const handleLocalCard = () => {
+    setImageUrl(
+      moodCardDataUrl({
+        summary,
+        range: startDate && endDate ? `${startDate} – ${endDate}` : '',
+        tag: selectedTag === "All" ? "" : selectedTag,
+      })
+    )
+    setImageIsLocal(true)
+    setImageUnavailable(false)
+    setStep(t('ai.localCardDone'))
   }
 
   return (
@@ -235,18 +265,37 @@ export default function AIGenerator() {
               {loading && stage === "drawing" ? t('ai.creating') : t('ai.createImage')}
             </button>
           </div>
+
+          {imageUnavailable && (
+            <div className="border border-pa-rule bg-pa-kraft p-4" role="status">
+              <p className="text-sm text-pa-ink">{t('ai.imageUnavailable')}</p>
+              <div className="mt-3 flex justify-center">
+                <button
+                  type="button"
+                  className="pa-btn pa-btn-ink"
+                  onClick={handleLocalCard}
+                  disabled={loading}
+                >
+                  {t('ai.createLocalCard')}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {imageUrl && (
         <div className="mt-8 text-center">
-          <p className="pa-label">{t('ai.saved')}</p>
+          <p className="pa-label">{imageIsLocal ? t('ai.localCardAlt') : t('ai.saved')}</p>
           {/* The provider may return a data URL, which next/image cannot optimise. */}
           <img
             src={imageUrl}
-            alt={t('ai.resultAlt')}
+            alt={imageIsLocal ? t('ai.localCardAlt') : t('ai.resultAlt')}
             className="h-auto w-full rounded-md border border-pa-rule"
           />
+          {imageIsLocal && (
+            <p className="mt-2 text-xs text-pa-pencil">{t('ai.localCardNote')}</p>
+          )}
         </div>
       )}
 

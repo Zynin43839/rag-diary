@@ -4,6 +4,7 @@ import { streamText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { findSimilarEntries, formatContext } from './rag';
 import { authGuard } from '../../lib/auth';
+import { imageFailure } from '../../lib/ai-errors';
 import { enforceRateLimit } from '../../lib/rate-limit';
 import {
     CHAT_MODEL,
@@ -136,13 +137,9 @@ export const aiRoutes = new Elysia()
 
         if (!res.ok) {
             const detail = (await res.text()).slice(0, 200);
-            // 429 means the current plan has no image quota; say so plainly.
-            set.status = res.status === 429 ? 503 : 502;
-            return {
-                error: res.status === 429
-                    ? 'Image generation is not available on the current AI plan'
-                    : `Image provider failed: ${detail}`,
-            };
+            const failure = imageFailure(res.status, detail);
+            set.status = failure.status;
+            return failure.body;
         }
 
         const data = (await res.json()) as {
@@ -152,7 +149,7 @@ export const aiRoutes = new Elysia()
         const image = parts.find((p) => p.inlineData?.data)?.inlineData;
         if (!image?.data) {
             set.status = 502;
-            return { error: 'Image provider returned no image' };
+            return { error: 'Image provider returned no image', code: 'image_empty' };
         }
 
         return { imageUrl: `data:${image.mimeType ?? 'image/png'};base64,${image.data}` };

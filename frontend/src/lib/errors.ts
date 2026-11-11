@@ -47,6 +47,9 @@ export function friendlyError(
   if (msg.includes('email')) {
     return 'errors.invalidEmail'
   }
+  if (msg.includes('not available on the current ai plan') || msg.includes('image_unavailable')) {
+    return 'ai.imageUnavailable'
+  }
   if (msg.includes('chat failed') || msg.includes('semantic search failed') || msg.includes('openai') || msg.includes('ai ')) {
     return 'errors.ai'
   }
