@@ -3,7 +3,7 @@
 
 Run after `scripts/build_docs_pdf.py` so the site never serves an older PDF than
 the one in output/pdf. The portfolio lives in its own repository (sibling folder
-`ba-portfolio`) and holds all 25 documents; the SA site is retired and redirects
+`oranut-blueprint`) and holds all 25 documents; the SA site is retired and redirects
 there.
 """
 import hashlib
@@ -14,7 +14,7 @@ import zipfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_TH = os.path.join(ROOT, 'output', 'pdf')
 SRC_EN = os.path.join(ROOT, 'output', 'pdf', 'en')
-PORTFOLIO = os.path.join(os.path.dirname(ROOT), 'ba-portfolio')
+PORTFOLIO = os.path.join(os.path.dirname(ROOT), 'oranut-blueprint')
 DOCS_TH = os.path.join(PORTFOLIO, 'assets', 'docs')
 DOCS_EN = os.path.join(DOCS_TH, 'en')
 MEDIA = os.path.join(PORTFOLIO, 'assets', 'media')
