@@ -9,7 +9,9 @@ export const errorHandler = new Elysia()
 
         if (error instanceof RateLimitError) {
             set.status = 429;
-            return { error: message };
+            // Tell the client when it may try again; without it a caller can only guess.
+            set.headers['retry-after'] = String(error.retryAfter);
+            return { error: message, retryAfter: error.retryAfter };
         }
         if (error instanceof UnauthorizedError) {
             set.status = 401;

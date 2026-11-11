@@ -45,3 +45,7 @@ end;
 $$;
 
 grant execute on function public.check_rate_limit(uuid, int, int) to authenticated;
+
+-- Postgres grants EXECUTE to PUBLIC by default, so anon could still call it and
+-- burn another user's quota. Close that before the grant above takes effect.
+revoke execute on function public.check_rate_limit(uuid, int, int) from public, anon;

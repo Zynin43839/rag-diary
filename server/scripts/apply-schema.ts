@@ -11,6 +11,7 @@ import postgres from 'postgres';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
+import { isAbsolute } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, '..', '..', '.env') });
@@ -23,7 +24,11 @@ if (!dbUrl) {
     process.exit(1);
 }
 
-const schemaPath = join(__dirname, '..', 'src', 'lib', 'schema.sql');
+// Default to the schema; any other SQL file can be passed as the first argument.
+const targetArg = process.argv[2];
+const schemaPath = targetArg
+    ? (isAbsolute(targetArg) ? targetArg : join(__dirname, '..', targetArg))
+    : join(__dirname, '..', 'src', 'lib', 'schema.sql');
 const schema = readFileSync(schemaPath, 'utf8');
 
 /** Split SQL on top-level semicolons, respecting $$ blocks, quotes and comments. */

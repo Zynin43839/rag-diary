@@ -1,11 +1,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class RateLimitError extends Error {
+    /** How long the client should wait before trying again, in seconds. */
+    readonly retryAfter: number;
+
     constructor(
+        retryAfter = 60,
         message = 'ใช้งานถี่เกินกำหนด กรุณารอสักครู่แล้วลองใหม่'
     ) {
         super(message);
         this.name = 'RateLimitError';
+        this.retryAfter = retryAfter;
     }
 }
 
@@ -32,5 +37,5 @@ export async function enforceRateLimit(
         return;
     }
 
-    if (data === false) throw new RateLimitError();
+    if (data === false) throw new RateLimitError(windowSeconds);
 }
