@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { api } from '@/lib/api'
 import { DIARY_ENTRIES_QUERY_KEY } from '@/lib/hooks/useDiary'
 import { useToast } from '@/components/ui/toast'
@@ -16,9 +17,10 @@ const TAGS: { value: string; labelKey: MessageKey }[] = [
   { value: 'Feeling', labelKey: 'diary.tagFeeling' },
 ]
 
-export default function DiaryForm() {
+export default function DiaryForm({ onSaved }: { onSaved?: () => void }) {
   const [content, setContent] = useState('')
   const [tag, setTag] = useState('General')
+  const [lastSavedTag, setLastSavedTag] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const ensureAuth = useRequireAuth()
   const toast = useToast()
@@ -36,7 +38,9 @@ export default function DiaryForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DIARY_ENTRIES_QUERY_KEY })
       setContent('')
+      setLastSavedTag(tag)
       toast.success(t('diary.saved'))
+      onSaved?.()
     },
     onError: (err) => {
       toast.error(t(friendlyError(err, 'diary.saveFailed')))
@@ -66,6 +70,7 @@ export default function DiaryForm() {
       />
 
       <p className="pa-label mt-1">{t('diary.tagLabel')}</p>
+      <p className="mb-2 text-xs text-pa-pencil">{t('diary.tagHint')}</p>
       <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {TAGS.map((item) => (
           <button
@@ -73,7 +78,7 @@ export default function DiaryForm() {
             key={item.value}
             onClick={() => setTag(item.value)}
             aria-pressed={tag === item.value}
-            className={`pa-tab justify-center ${tag === item.value ? 'pa-tab-active' : ''}`}
+            className={`pa-tab justify-center py-2 ${tag === item.value ? 'pa-tab-active' : ''}`}
           >
             {t(item.labelKey)}
           </button>
@@ -81,8 +86,24 @@ export default function DiaryForm() {
       </div>
 
       <button type="submit" className="pa-btn pa-btn-ink w-full" disabled={mutation.isPending}>
-        {mutation.isPending ? t('common.saving') : t('diary.save')}
+        {mutation.isPending
+          ? t('common.saving')
+          : t('diary.saveInTag', { tag: t(TAGS.find((item) => item.value === tag)?.labelKey ?? 'diary.tagGeneral') })}
       </button>
+
+      {lastSavedTag && (
+        <div
+          role="status"
+          className="mt-4 flex flex-wrap items-center justify-between gap-3 border border-pa-olive bg-pa-sticky px-4 py-3"
+        >
+          <span className="text-sm font-semibold text-pa-ink">
+            {t('diary.savedTitle')} · #{t(TAGS.find((item) => item.value === lastSavedTag)?.labelKey ?? 'diary.tagGeneral')}
+          </span>
+          <Link href="/historyBoard" className="pa-btn pa-btn-ghost text-sm">
+            {t('diary.viewAll')}
+          </Link>
+        </div>
+      )}
     </form>
   )
 }

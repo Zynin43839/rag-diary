@@ -1,6 +1,7 @@
 'use client'
 
 import Link from "next/link"
+import { useRef } from "react"
 import DiaryForm from "@/components/diary/diaryForm"
 import RecentPages from "@/components/diary/recentPages"
 import { CalendarSearch, FileStack, Settings } from "lucide-react"
@@ -14,11 +15,17 @@ const LINKS = [
 
 export default function Home() {
   const t = useT()
+  const recentRef = useRef<HTMLDivElement | null>(null)
+
+  // After a save, bring the newest entry into view: the toast alone is easy to miss.
+  const showNewEntry = () => {
+    recentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2">
-        <DiaryForm />
+        <DiaryForm onSaved={showNewEntry} />
       </div>
 
       <aside
@@ -42,7 +49,7 @@ export default function Home() {
         ))}
       </aside>
 
-      <div className="hidden lg:block lg:h-full">
+      <div className="hidden lg:block lg:h-full" ref={recentRef} id="recent-entries">
         <RecentPages />
       </div>
     </div>
