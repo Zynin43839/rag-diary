@@ -24,8 +24,8 @@ export const th = {
   'common.language': 'ภาษา',
 
   // --------------------------------------------------------------------- nav
-  'nav.home': 'หน้าแรก',
-  'nav.diary': 'ไดอารี่',
+  'nav.home': 'เขียนบันทึก',
+  'nav.diary': 'ไดอารี่ทั้งหมด',
   'nav.search': 'ค้นหา',
   'nav.history': 'ประวัติ',
   'nav.account': 'บัญชี',
@@ -38,7 +38,7 @@ export const th = {
   'nav.shortcuts': 'ทางลัด',
 
   // ------------------------------------------------------------------ titles
-  'title.diary': 'ไดอารี่ของฉัน',
+  'title.diary': 'ไดอารี่ทั้งหมด',
   'title.search': 'ค้นหาและสนทนา',
   'title.history': 'ประวัติบันทึก',
   'title.favorite': 'รายการโปรด',

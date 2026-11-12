@@ -20,8 +20,8 @@ export const en = {
   'common.loading': 'Gathering your memories…',
   'common.language': 'Language',
 
-  'nav.home': 'Home',
-  'nav.diary': 'Diary',
+  'nav.home': 'Write',
+  'nav.diary': 'All entries',
   'nav.search': 'Search',
   'nav.history': 'History',
   'nav.account': 'Account',
@@ -33,7 +33,7 @@ export const en = {
   'nav.mainMenu': 'Main menu',
   'nav.shortcuts': 'Shortcuts',
 
-  'title.diary': 'My diary',
+  'title.diary': 'All entries',
   'title.search': 'Search and chat',
   'title.history': 'Entry history',
   'title.favorite': 'Favorites',
