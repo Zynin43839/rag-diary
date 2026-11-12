@@ -7,6 +7,7 @@
     "check:supabase": "bun run scripts/check-supabase.ts",
     "check:rate-limit": "bun run scripts/check-rate-limit.ts",
     "load-test": "bun run scripts/load-test.ts",
+    "load-concurrency": "bun run scripts/load-concurrency.ts",
     "apply:schema": "bun run scripts/apply-schema.ts"
   },
   "dependencies": {
