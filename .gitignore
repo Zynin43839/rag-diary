@@ -63,7 +63,13 @@ interview-prep/
 
 #Policy A: keep the repo to code + QA config (private/generated stay local)
 docs/
-output/
+output/*
+# The deck generator is source code, not an artifact: keep it under version control
+# so the deck can be rebuilt on another machine.
+!output/presentation/
+output/presentation/*
+!output/presentation/build.py
+!output/presentation/slides/
 portfolio/
 content-agent/
 clip/
