@@ -78,3 +78,8 @@ clip/
 #Stray root npm files (frontend and server have their own package.json)
 /package.json
 /package-lock.json
+
+# Playwright output
+test-results/
+playwright-report/
+blob-report/
