@@ -24,7 +24,7 @@ export const noteRoutes = new Elysia()
     .use(authGuard)
 
     .get("/notes", async ({ db, user }) => {
-        await enforceRateLimit(db, user.id, 60, 60);
+        await enforceRateLimit(db, user.id, 60, 60, 'notes.read');
         const { data, error } = await db
             .from('diary_entries')
             .select(PUBLIC_COLUMNS)
@@ -35,7 +35,7 @@ export const noteRoutes = new Elysia()
     })
 
     .post("/notes", async ({ db, user, body }) => {
-        await enforceRateLimit(db, user.id, 60, 60);
+        await enforceRateLimit(db, user.id, 60, 60, 'notes.write');
         const embedding = await embedOrNull(body.content);
         const { data, error } = await db
             .from('diary_entries')
@@ -57,7 +57,7 @@ export const noteRoutes = new Elysia()
     })
 
     .delete("/notes/:id", async ({ db, user, params, set }) => {
-        await enforceRateLimit(db, user.id, 30, 60);
+        await enforceRateLimit(db, user.id, 30, 60, 'notes.delete');
         const { data, error } = await db
             .from('diary_entries')
             .delete()
@@ -76,7 +76,7 @@ export const noteRoutes = new Elysia()
     })
 
     .patch("/notes/:id", async ({ db, user, params, body, set }) => {
-        await enforceRateLimit(db, user.id, 60, 60);
+        await enforceRateLimit(db, user.id, 60, 60, 'notes.write');
         const embedding = await embedOrNull(body.content);
         const { data, error } = await db
             .from('diary_entries')

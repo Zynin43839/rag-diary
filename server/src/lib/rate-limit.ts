@@ -24,18 +24,34 @@ export async function enforceRateLimit(
     db: SupabaseClient,
     userId: string,
     limit: number,
-    windowSeconds: number
+    windowSeconds: number,
+    route: string
 ): Promise<void> {
     const { data, error } = await db.rpc('check_rate_limit', {
+        p_user_id: userId,
+        p_route: route,
+        p_limit: limit,
+        p_window_seconds: windowSeconds,
+    });
+
+    if (!error) {
+        if (data === false) throw new RateLimitError(windowSeconds);
+        return;
+    }
+
+    // The per-route function arrives with a migration. Until it is applied, fall
+    // back to the original shared counter so limits stay on rather than silently
+    // switching off.
+    const legacy = await db.rpc('check_rate_limit', {
         p_user_id: userId,
         p_limit: limit,
         p_window_seconds: windowSeconds,
     });
 
-    if (error) {
+    if (legacy.error) {
         console.warn('[rate-limit] skipped:', error.message?.slice(0, 120));
         return;
     }
 
-    if (data === false) throw new RateLimitError(windowSeconds);
+    if (legacy.data === false) throw new RateLimitError(windowSeconds);
 }

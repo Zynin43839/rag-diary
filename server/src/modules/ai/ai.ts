@@ -25,7 +25,7 @@ export const aiRoutes = new Elysia()
     .use(authGuard)
 
     .post("/search/semantic", async ({ db, user, body }) => {
-        await enforceRateLimit(db, user.id, 60, 60);
+        await enforceRateLimit(db, user.id, 60, 60, 'search');
         try {
             const results = await findSimilarEntries(
                 db,
@@ -46,7 +46,7 @@ export const aiRoutes = new Elysia()
     })
 
     .post("/chat", async ({ db, user, body }) => {
-        await enforceRateLimit(db, user.id, 20, 60);
+        await enforceRateLimit(db, user.id, 20, 60, 'chat');
         try {
             const relevantEntries = await findSimilarEntries(db, body.query, 0.6, 5);
             const context = formatContext(relevantEntries);
@@ -85,7 +85,7 @@ export const aiRoutes = new Elysia()
     })
 
     .post("/ai/summarize", async ({ db, user, body, set }) => {
-        await enforceRateLimit(db, user.id, 20, 60);
+        await enforceRateLimit(db, user.id, 20, 60, 'summarize');
         if (body.notes.length === 0) {
             set.status = 400;
             return { error: 'notes must not be empty' };
@@ -118,7 +118,7 @@ export const aiRoutes = new Elysia()
     })
 
     .post("/ai/imagine", async ({ db, user, body, set }) => {
-        await enforceRateLimit(db, user.id, 5, 60);
+        await enforceRateLimit(db, user.id, 5, 60, 'imagine');
         const res = await fetch(
             `${GEMINI_API_BASE}/models/${IMAGE_MODEL}:generateContent`,
             {
