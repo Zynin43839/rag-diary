@@ -10,6 +10,10 @@ import { defineConfig, devices } from '@playwright/test'
  * Run: bun run test:e2e
  * Point them somewhere else with E2E_BASE_URL.
  */
+// Locally we drive the installed Chrome (no download); in CI Playwright's own
+// Chromium is used, because the runner has no Chrome channel.
+const CHANNEL = process.env.CI ? undefined : 'chrome'
+
 export default defineConfig({
   testDir: './tests/e2e',
   timeout: 30_000,
@@ -19,11 +23,11 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'https://rag-diary-app.vercel.app',
-    channel: 'chrome',
+    channel: CHANNEL,
     locale: 'th-TH',
     timezoneId: 'Asia/Bangkok',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome' } }],
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], channel: CHANNEL } }],
 })

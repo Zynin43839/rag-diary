@@ -46,3 +46,23 @@ jobs:
         run: bunx tsc --noEmit
       - name: Unit tests
         run: bun test
+
+  e2e:
+    # Smoke checks against the deployed app. They answer one question: can a user
+    # still sign in and switch language after this push?
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+      - name: Smoke tests
+        run: bun run test:e2e
+        env:
+          CI: '1'
+          E2E_BASE_URL: ${{ vars.E2E_BASE_URL || 'https://rag-diary-app.vercel.app' }}
