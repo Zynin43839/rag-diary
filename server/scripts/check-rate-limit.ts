@@ -89,22 +89,34 @@ async function main() {
     let firstLimited = 0;
     let retryAfter = '';
 
-    for (let i = 1; i <= REQUESTS; i++) {
-        const res = await fetch(`${API}${ENDPOINT}`, {
-            method: METHOD,
-            headers: {
-                Cookie: cookie,
-                ...(BODY ? { 'Content-Type': 'application/json' } : {}),
-            },
-            ...(BODY ? { body: BODY } : {}),
-        });
-        counts.set(res.status, (counts.get(res.status) ?? 0) + 1);
-        if (res.status === 429 && !firstLimited) {
-            firstLimited = i;
-            retryAfter = res.headers.get('retry-after') ?? '(none)';
+    const CHUNK = 8;
+    for (let done = 0; done < REQUESTS; done += CHUNK) {
+        const size = Math.min(CHUNK, REQUESTS - done);
+        const results = await Promise.all(
+            Array.from({ length: size }, async (_, k) => {
+                const index = done + k + 1;
+                const res = await fetch(`${API}${ENDPOINT}`, {
+                    method: METHOD,
+                    headers: {
+                        Cookie: cookie,
+                        ...(BODY ? { 'Content-Type': 'application/json' } : {}),
+                    },
+                    ...(BODY ? { body: BODY } : {}),
+                });
+                const retry = res.headers.get('retry-after') ?? '';
+                await res.text().catch(() => '');
+                return { index, status: res.status, retry };
+            })
+        );
+
+        for (const r of results) {
+            counts.set(r.status, (counts.get(r.status) ?? 0) + 1);
+            if (r.status === 429 && !firstLimited) {
+                firstLimited = r.index;
+                retryAfter = r.retry || '(none)';
+            }
         }
-        await res.text().catch(() => '');
-        if (i % 10 === 0) process.stdout.write(`  ${i}/${REQUESTS} sent\n`);
+        process.stdout.write(`  ${Math.min(done + CHUNK, REQUESTS)}/${REQUESTS} sent\n`);
     }
 
     console.log('\nstatus counts:', Object.fromEntries([...counts.entries()].sort()));

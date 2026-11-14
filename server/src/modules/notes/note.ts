@@ -23,7 +23,8 @@ async function embedOrNull(content: string): Promise<number[] | null> {
 export const noteRoutes = new Elysia()
     .use(authGuard)
 
-    .get("/notes", async ({ db }) => {
+    .get("/notes", async ({ db, user }) => {
+        await enforceRateLimit(db, user.id, 60, 60);
         const { data, error } = await db
             .from('diary_entries')
             .select(PUBLIC_COLUMNS)
@@ -55,7 +56,8 @@ export const noteRoutes = new Elysia()
         })
     })
 
-    .delete("/notes/:id", async ({ db, params, set }) => {
+    .delete("/notes/:id", async ({ db, user, params, set }) => {
+        await enforceRateLimit(db, user.id, 30, 60);
         const { data, error } = await db
             .from('diary_entries')
             .delete()
