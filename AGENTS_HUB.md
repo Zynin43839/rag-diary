@@ -49,7 +49,8 @@ RAG-Diary/
 ├── package.json                 # Monorepo root (untracked lockfile warning — see below)
 ├── package-lock.json            # Root lockfile (untracked)
 ├── .gitignore                   # Ignore rules (incl. private-study section)
-└── AGENTS_HUB.md                # This file
+├── AGENTS_HUB.md                # This file
+└── SESSION_HANDOFF.md           # Continuity: verified state, open work, human-only actions
 ```
 
 Note on git tracking: currently only `frontend/` (48 files), `server/` (19 files) and `.gitignore` are tracked. `docs/`, `content-agent/`, `output/` and the root `*.md` docs are not tracked yet.
@@ -126,6 +127,7 @@ Data Sources (News, Market, Portfolio)
 |------|---------|--------------|
 | `docs/README.md` | Entry point for the BA/SA doc set | Start here for documentation work |
 | `docs/DOCUMENT-PLAN.md` | Register + process + locked decisions + decision log | Before editing any doc |
+| `SESSION_HANDOFF.md` | Verified state, open work, actions only a human can take | Resuming after a break |
 | `output/presentation/README.md` | Project deck kit (PPTX/HTML + build) | Updating the slides |
 | `ARCHITECTURE.md` | RAG-Diary architecture + data flow | Understanding the app |
 | `IMPLEMENTATION_SUMMARY.md` | Summary of implemented features | Seeing what is done |

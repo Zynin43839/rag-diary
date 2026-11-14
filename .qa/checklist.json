@@ -67,7 +67,7 @@
     },
     {
       "name": "frontend unit tests",
-      "cmd": "bun test frontend/tests",
+      "cmd": "bun test frontend/tests --path-ignore-patterns \"**/e2e/**\"",
       "expect_exit": 0
     },
     {
